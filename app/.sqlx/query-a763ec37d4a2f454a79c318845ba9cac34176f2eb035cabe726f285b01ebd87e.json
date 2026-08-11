@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.work_order_tasks\n          (tenant_id, work_order_id, seq, title, input_type, unit,\n           min_value, max_value, options, is_required)\n        SELECT $1, $2, c.seq, c.title,\n               coalesce(c.input_type, 'CHECKBOX'), c.unit,\n               c.min_value, c.max_value, c.options,\n               coalesce(c.is_required, false)\n        FROM fms.maintenance_templates t\n        CROSS JOIN LATERAL jsonb_to_recordset(t.checklist) AS c(\n          seq smallint, title varchar, input_type text, unit varchar,\n          min_value numeric, max_value numeric, options jsonb, is_required boolean\n        )\n        WHERE t.id = $3\n        ON CONFLICT (work_order_id, seq) DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a763ec37d4a2f454a79c318845ba9cac34176f2eb035cabe726f285b01ebd87e"
+}

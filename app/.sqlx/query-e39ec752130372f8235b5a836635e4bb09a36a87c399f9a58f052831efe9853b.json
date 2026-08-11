@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.assets SET deleted_at = clock_timestamp()\n          WHERE bim_model_id = $1 AND deleted_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e39ec752130372f8235b5a836635e4bb09a36a87c399f9a58f052831efe9853b"
+}

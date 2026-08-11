@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH classified AS (\n             SELECT r.id,\n                    r.start_at <= clock_timestamp() AS is_past,\n                    r.status NOT IN ('PENDING_APPROVAL','CONFIRMED','CHECKED_IN') AS is_terminal\n               FROM fms.reservations r\n              WHERE r.recurrence_group_id = $1\n           ), cancelled AS (\n             UPDATE fms.reservations r\n                SET status = 'CANCELLED',\n                    cancelled_at = clock_timestamp(),\n                    cancelled_by = fms.current_user_id(),\n                    cancellation_reason = $2\n               FROM classified c\n              WHERE r.id = c.id AND NOT c.is_past AND NOT c.is_terminal\n             RETURNING r.id\n           )\n           SELECT (SELECT count(*) FROM cancelled) AS \"cancelled!\",\n                  count(*) FILTER (WHERE c.is_past) AS \"skipped_past!\",\n                  count(*) FILTER (WHERE NOT c.is_past AND c.is_terminal)\n                    AS \"skipped_terminal!\",\n                  count(*) AS \"total!\"\n             FROM classified c",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "cancelled!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "skipped_past!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "skipped_terminal!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e97a12e13fe13a1e57b17e6fac682956bfc0ce8d9b0a29bd54aea14fec6e66a0"
+}

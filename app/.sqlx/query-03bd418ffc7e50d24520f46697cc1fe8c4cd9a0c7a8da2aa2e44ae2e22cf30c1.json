@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.organizations\n          (tenant_id, parent_id, code, name, org_type, cost_center,\n           manager_user_id, attributes)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, coalesce($8, '{}'::jsonb))\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "03bd418ffc7e50d24520f46697cc1fe8c4cd9a0c7a8da2aa2e44ae2e22cf30c1"
+}

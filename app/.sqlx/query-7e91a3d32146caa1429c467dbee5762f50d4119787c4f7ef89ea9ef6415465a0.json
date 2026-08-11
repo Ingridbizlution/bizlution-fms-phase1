@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT request_hash::text AS \"request_hash!\",\n                  state,\n                  response_status,\n                  response_body\n           FROM fms.idempotency_keys\n           WHERE tenant_id = $1 AND user_id = $2 AND idempotency_key = $3 AND endpoint = $4\n             AND expires_at > now()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "request_hash!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "response_status",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 3,
+        "name": "response_body",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "7e91a3d32146caa1429c467dbee5762f50d4119787c4f7ef89ea9ef6415465a0"
+}

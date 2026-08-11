@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT r.resource_id AS \"resource_id!\",\n               coalesce(r.buffer_start_at, r.start_at) AS \"start_at!\",\n               coalesce(r.buffer_end_at, r.end_at)     AS \"end_at!\",\n               CASE WHEN r.buffer_start_at IS NOT NULL OR r.buffer_end_at IS NOT NULL\n                    THEN 'BUFFER' ELSE 'RESERVATION' END AS \"kind!\",\n               r.title::text AS \"reason\",\n               r.is_private AS \"is_private!\",\n               r.organizer_id AS \"organizer_id\",\n               r.on_behalf_of_id AS \"on_behalf_of_id\"\n        FROM fms.reservations r\n        WHERE r.facility_id = $1\n          AND r.resource_id = ANY($2)\n          AND r.status NOT IN ('CANCELLED','REJECTED','NO_SHOW','COMPLETED')\n          AND tstzrange(coalesce(r.buffer_start_at, r.start_at),\n                        coalesce(r.buffer_end_at, r.end_at), '[)')\n              && tstzrange($3, $4, '[)')\n\n        UNION ALL\n\n        -- 尚未過期的佔位。`reservation_holds` 以 `bookable_resource_id` 為鍵\n        -- （不像 reservations 有反正規化的 resource_id），因此要 JOIN 換回來。\n        SELECT coalesce(hb.spatial_node_id, hb.asset_id) AS \"resource_id!\",\n               h.start_at AS \"start_at!\", h.end_at AS \"end_at!\",\n               'HOLD'::text AS \"kind!\",\n               NULL::text AS \"reason\",\n               false AS \"is_private!\",\n               NULL::uuid AS \"organizer_id\",\n               NULL::uuid AS \"on_behalf_of_id\"\n        FROM fms.reservation_holds h\n        JOIN fms.bookable_resources hb ON hb.id = h.bookable_resource_id\n        WHERE h.facility_id = $1\n          AND coalesce(hb.spatial_node_id, hb.asset_id) = ANY($2)\n          AND h.expires_at > clock_timestamp()\n          AND h.status = 'ACTIVE'\n          AND tstzrange(h.start_at, h.end_at, '[)') && tstzrange($3, $4, '[)')\n\n        UNION ALL\n\n        -- 封鎖時段（維護、活動、清潔）—— 指定了資源的那些。\n        SELECT coalesce(b.spatial_node_id, b.asset_id) AS \"resource_id!\",\n               bl.start_at AS \"start_at!\", bl.end_at AS \"end_at!\",\n               CASE WHEN bl.work_order_id IS NOT NULL\n                    THEN 'MAINTENANCE' ELSE 'BLACKOUT' END AS \"kind!\",\n               bl.reason::text AS \"reason\",\n               false AS \"is_private!\",\n               NULL::uuid AS \"organizer_id\",\n               NULL::uuid AS \"on_behalf_of_id\"\n        FROM fms.resource_blackouts bl\n        JOIN fms.bookable_resources b ON b.id = bl.bookable_resource_id\n        WHERE bl.facility_id = $1\n          AND coalesce(b.spatial_node_id, b.asset_id) = ANY($2)\n          AND tstzrange(bl.start_at, bl.end_at, '[)') && tstzrange($3, $4, '[)')\n\n        UNION ALL\n\n        -- **全場域封鎖**（`bookable_resource_id IS NULL`）。\n        --\n        -- 上面那一段是 `JOIN fms.bookable_resources`（內連接），因此\n        -- `bookable_resource_id` 為 NULL 的列會被丟掉 —— 而 011 的\n        -- `check_resource_availability()` **會**擋這種列\n        -- （`OR (b.bookable_resource_id IS NULL AND b.facility_id = ...)`）。\n        --\n        -- 少了這一段，症狀是：日曆顯示可預約 → 使用者選了 → 送出得到衝突，\n        -- 而衝突指向一個他在畫面上看不到的封鎖時段。\n        --\n        -- 這個缺口原本是潛伏的（在 `POST /resource-blackouts` 之前，沒有端點\n        -- 建得出全場域封鎖），因此補上寫入端點的同一刀必須修它。\n        --\n        -- `CROSS JOIN unnest($2)` 把一段全場域封鎖展開到查詢要求的每一個資源上\n        -- —— 它擋的就是全部。\n        SELECT rid AS \"resource_id!\",\n               bl.start_at AS \"start_at!\", bl.end_at AS \"end_at!\",\n               CASE WHEN bl.work_order_id IS NOT NULL\n                    THEN 'MAINTENANCE' ELSE 'BLACKOUT' END AS \"kind!\",\n               bl.reason::text AS \"reason\",\n               false AS \"is_private!\",\n               NULL::uuid AS \"organizer_id\",\n               NULL::uuid AS \"on_behalf_of_id\"\n        FROM fms.resource_blackouts bl\n        CROSS JOIN unnest($2::uuid[]) AS rid\n        WHERE bl.facility_id = $1\n          AND bl.bookable_resource_id IS NULL\n          AND tstzrange(bl.start_at, bl.end_at, '[)') && tstzrange($3, $4, '[)')\n\n        ORDER BY 1, 2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "resource_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "start_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "end_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "kind!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_private!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "organizer_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "on_behalf_of_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0bf9c441cd402814feb22a7b78464f7b585bd908da54fc45ec84138e6a110064"
+}

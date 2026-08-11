@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.reservations\n              SET status = 'CONFIRMED',\n                  approved_by = $2,\n                  approved_at = clock_timestamp()\n            WHERE id = $1 AND status = 'PENDING_APPROVAL'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "54ce5852b01b700c8177075e543a5c1928ac18fa1ff8c47b6bb5709a60c811f5"
+}

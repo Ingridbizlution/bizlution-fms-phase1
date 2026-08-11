@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT o.id, o.parent_id, o.code::text AS \"code!\", o.name::text AS \"name!\",\n               o.org_type, o.org_path::text AS \"org_path!\",\n               -- depth 不是欄位：組織樹的深度由 ltree 的層數導出。\n               (nlevel(o.org_path) - 1)::int AS \"depth!\",\n               o.cost_center::text AS \"cost_center\",\n               (SELECT count(*) FROM fms.facilities f\n                 WHERE f.org_id = o.id AND f.deleted_at IS NULL) AS \"facility_count!\",\n               o.status\n        FROM fms.organizations o\n        WHERE o.deleted_at IS NULL\n          AND ($1::text IS NULL OR (o.org_path::text, o.id) > ($1::text, $2::uuid))\n        ORDER BY o.org_path, o.id\n        LIMIT $3\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "org_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "org_path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "depth!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "cost_center",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "facility_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      null,
+      null,
+      false,
+      null,
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "44f0150ca3baa9c5735c7af2a4168975fd7c6eb8d6bd8445496689c66c16cfe8"
+}

@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, code::text AS \"code!\", name::text AS \"name!\",\n                  industry::text AS \"industry\", feature_flags AS \"feature_flags!\"\n           FROM fms.tenants",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "industry",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "feature_flags!",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "ce1fe26b19d70fc61e6567cdd2aeaf052fbb3822ec620fddaa559d9b594b8d1b"
+}

@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, tenant_id IS NULL AS \"is_platform!\",\n                  code::text AS \"code!\", name::text AS \"name!\",\n                  name_en::text AS name_en, category::text AS \"category!\",\n                  icon::text AS icon\n             FROM fms.amenities\n            WHERE is_active\n            ORDER BY display_order, code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_platform!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "name_en",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "category!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "icon",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "bfc50620b0d7af1052db101439c16f6cbe78663b9c08603b4f1d46412b38f9d5"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.reservations\n                          SET status = 'CANCELLED', cancelled_at = clock_timestamp(),\n                              cancellation_reason = '外部日曆已刪除此事件'\n                        WHERE id = $1 AND status NOT IN ('CANCELLED','COMPLETED','REJECTED','NO_SHOW','EXPIRED')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "53fceae4947c9a68adf3da6302494e8304bd0c8ceb11d99802454935380d7a93"
+}

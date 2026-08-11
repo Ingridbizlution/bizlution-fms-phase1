@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT tenant_id, id, provider, ms_tenant_id, sync_cron, last_synced_at\n                 FROM fms.calendar_integrations\n                WHERE status = 'ACTIVE'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "provider",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "ms_tenant_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "sync_cron",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_synced_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "13117cebc000c34bc0cc0737d6e57bc076ed150fdb28e3f51e425565be49807c"
+}

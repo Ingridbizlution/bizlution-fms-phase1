@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.spatial_nodes SET\n             code           = coalesce($2, code),\n             name           = coalesce($3, name),\n             node_type_code = coalesce($4, node_type_code),\n             capacity       = coalesce($5, capacity),\n             is_bookable    = coalesce($6, is_bookable),\n             is_active      = coalesce($7, is_active),\n             parent_id      = CASE WHEN $8 THEN $9 ELSE parent_id END,\n             floor_level    = CASE WHEN $10 THEN $11 ELSE floor_level END,\n             floor_label    = CASE WHEN $12 THEN $13 ELSE floor_label END,\n             area_sqm       = CASE WHEN $14 THEN $15::float8::numeric ELSE area_sqm END,\n             bim_element_id = CASE WHEN $16 THEN $17 ELSE bim_element_id END,\n             updated_at = clock_timestamp()\n           WHERE id = $1 AND deleted_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Uuid",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Float8",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f07a85eaffb73176a35f13672c01fbbf3f28e1bef88912f57ddd5cbc87a86107"
+}

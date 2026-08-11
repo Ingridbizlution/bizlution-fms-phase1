@@ -1,0 +1,17 @@
+[package]
+name = "fms-reservation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fms-shared.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+tokio = { workspace = true, features = ["time", "sync"] }

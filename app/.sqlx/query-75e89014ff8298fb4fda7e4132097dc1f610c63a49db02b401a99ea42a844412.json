@@ -1,0 +1,97 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT b.id,\n               coalesce(b.spatial_node_id, b.asset_id) AS \"resource_id!\",\n               b.resource_type,\n               b.display_name::text AS \"display_name!\",\n               b.capacity, b.is_bookable, b.requires_approval,\n               b.min_duration_minutes, b.max_duration_minutes,\n               b.slot_granularity_minutes, b.advance_booking_days,\n               b.opening_hours AS \"opening_hours!\", b.facility_id\n        FROM fms.bookable_resources b\n        WHERE ($1::uuid IS NULL OR b.facility_id = $1)\n          AND ($2::int IS NULL OR b.capacity >= $2)\n          AND (NOT $3::bool OR b.is_bookable)\n        ORDER BY b.display_name, b.id\n        LIMIT $4\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "resource_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "capacity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_bookable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "requires_approval",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "min_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "max_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "slot_granularity_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "advance_booking_days",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "opening_hours!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 12,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "75e89014ff8298fb4fda7e4132097dc1f610c63a49db02b401a99ea42a844412"
+}

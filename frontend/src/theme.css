@@ -1,0 +1,107 @@
+/* Japanese-minimalist token overrides layered on top of stock Tabler.
+   Only --tblr-* custom properties are touched here — no component selectors —
+   so this survives a `@tabler/core` version bump cleanly. Semantic colors
+   (--tblr-danger/--tblr-warning/--tblr-success) are intentionally left at
+   Tabler's defaults; badges across this app (see src/lib/statusColors.ts)
+   depend on those reading as red/amber/green. */
+:root {
+  /* Muted primary: soft graphite-blue instead of Tabler's vivid default #066fd1 */
+  --tblr-primary: #4b5a73;
+  --tblr-primary-rgb: 75, 90, 115;
+  --tblr-link-color: var(--tblr-primary);
+
+  /* Hairline borders, flatter geometry */
+  --tblr-border-width: 1px;
+  --tblr-border-radius: 4px;
+  --tblr-border-radius-sm: 3px;
+  --tblr-border-radius-lg: 6px;
+  --tblr-border-color: #e4e4e2;
+  --tblr-border-color-translucent: #e4e4e2;
+
+  /* Flatten ambient shadows on cards/top-level chrome; keep dropdown/modal
+     depth but soften it */
+  --tblr-shadow-card: none;
+  --tblr-card-box-shadow: none;
+  --tblr-box-shadow: none;
+  --tblr-box-shadow-sm: none;
+  --tblr-shadow-dropdown: 0 4px 16px rgba(31, 36, 48, 0.08);
+  --tblr-modal-box-shadow: 0 8px 28px rgba(31, 36, 48, 0.1);
+
+  /* Warm-gray neutral surfaces instead of blue-tinted gray */
+  --tblr-body-bg: #f7f6f4;
+  --tblr-bg-surface: #ffffff;
+  --tblr-bg-surface-secondary: #f7f6f4;
+  --tblr-bg-surface-tertiary: #f2f1ee;
+  --tblr-body-color: #2b2d33;
+
+  /* Type: CJK-aware stack (Traditional Chinese + Japanese) with Inter leading
+     for latin characters */
+  --tblr-font-sans-serif: "Inter Var", Inter, -apple-system, BlinkMacSystemFont, "PingFang TC",
+    "Hiragino Sans", "Noto Sans TC", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
+  --tblr-body-font-size: 0.875rem;
+  --tblr-font-weight-bold: 600;
+
+  /* Generous whitespace */
+  --tblr-card-cap-padding-y: 0.875rem;
+  --tblr-card-cap-padding-x: 1.25rem;
+  --tblr-spacer: 1.25rem;
+}
+
+/* Dark sidebar: keep it dark (matches the existing shell), just desaturate
+   and flatten to match the rest of the palette */
+.navbar-vertical {
+  --tblr-navbar-bg: #23262e;
+  --tblr-navbar-color: rgba(255, 255, 255, 0.78);
+  --tblr-navbar-hover-color: #ffffff;
+  --tblr-navbar-active-color: #ffffff;
+}
+
+/* Top navbar: plain hairline-bottomed bar, not a colored band */
+.navbar:not(.navbar-vertical) {
+  --tblr-navbar-bg: #ffffff;
+  --tblr-navbar-color: #2b2d33;
+  border-bottom: 1px solid var(--tblr-border-color);
+}
+
+/* Subtle hover lift on interactive cards (Kanban cards, clickable report/dashboard cards) —
+   a border-color shift only, no shadow, to stay consistent with the flat card style above. */
+.card {
+  transition: border-color 120ms ease;
+}
+a.card:hover,
+.card[role="button"]:hover {
+  border-color: var(--tblr-primary);
+}
+
+/* Per-module accent tint on sidebar icons (see src/shell/nav.ts) — a small dot of color for
+   visual hierarchy while keeping the dark sidebar itself desaturated. */
+.navbar-vertical .nav-link-icon {
+  border-radius: 6px;
+  padding: 2px;
+  transition: background-color 120ms ease;
+}
+.navbar-vertical .nav-link.active .nav-link-icon,
+.navbar-vertical .nav-link:hover .nav-link-icon {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Navbar dropdowns (notifications/language/facility switcher) anchor via plain CSS
+   `.dropdown-menu-end` (right: 0 relative to the trigger's own narrow nav-item box) — on
+   phone widths the trigger icons sit left-of-center, so right-aligning a 20rem-wide menu
+   (the notification card) pushes most of it off-screen (measured: left: -224px). Centering
+   on the trigger instead of right-aligning keeps it within the viewport regardless of which
+   icon opened it, and — unlike `position: fixed` — stays correctly anchored under the icon
+   if the page has been scrolled. */
+@media (max-width: 767.98px) {
+  .navbar .dropdown-menu {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    max-width: calc(100vw - 1rem);
+  }
+  .navbar .dropdown-menu-arrow:before {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) rotate(45deg);
+  }
+}

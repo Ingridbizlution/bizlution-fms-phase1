@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.work_order_tasks SET\n          result_value = coalesce($2, result_value),\n          is_pass      = coalesce($3, is_pass),\n          notes        = coalesce($4, notes),\n          completed_by = CASE WHEN $2 IS NOT NULL THEN $5 ELSE completed_by END,\n          completed_at = CASE WHEN $2 IS NOT NULL\n                              THEN clock_timestamp() ELSE completed_at END\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Jsonb",
+        "Bool",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d94dd28b3d266662be07f89db8c2a1c831e8adc77f6985237a1e1dfbf032d02d"
+}

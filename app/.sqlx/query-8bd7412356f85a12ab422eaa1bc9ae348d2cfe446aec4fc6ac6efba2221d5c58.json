@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.reservations\n              SET recurrence_group_id = $2, recurrence_rule = $3\n            WHERE id = ANY($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8bd7412356f85a12ab422eaa1bc9ae348d2cfe446aec4fc6ac6efba2221d5c58"
+}

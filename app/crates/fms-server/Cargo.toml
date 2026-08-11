@@ -1,0 +1,54 @@
+[package]
+name = "fms-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fms-shared.workspace = true
+fms-identity.workspace = true
+fms-reservation.workspace = true
+fms-asset.workspace = true
+fms-workorder.workspace = true
+fms-maintenance.workspace = true
+fms-attachment.workspace = true
+fms-tenancy.workspace = true
+fms-catalogue.workspace = true
+fms-report.workspace = true
+fms-notification.workspace = true
+fms-calendar.workspace = true
+tokio.workspace = true
+axum.workspace = true
+tower-http.workspace = true
+sqlx.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+dotenvy.workspace = true
+uuid.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+serde_yaml = "0.9"
+# 手簽一個 070 之前形狀（沒有 jti）的 refresh token，驗 fail-closed 那一格。
+# 不能用 fms_identity::jwt::issue —— 它一定會產生 jti，那正是要繞過的東西。
+jsonwebtoken = { workspace = true }
+jsonschema = { workspace = true }
+chrono = { workspace = true }
+fms-shared = { workspace = true }
+tower = { workspace = true }
+http-body-util = "0.1"
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+fms-identity = { workspace = true }
+fms-maintenance = { workspace = true }
+fms-worker = { workspace = true }
+fms-tenancy = { workspace = true }
+chrono-tz = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+# 真的去抓預簽網址。不抓就只是斷言一個字串長得像 URL，
+# 而 SigV4 簽錯的症狀正是「網址看起來對、下載回 403」。
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }

@@ -1,0 +1,253 @@
+# =============================================================================
+# Facility Management System — 正式環境（單台 VM）
+# =============================================================================
+# 跟 docker-compose.yml（本機開發）的差異，見 docker/README.md「正式環境
+# 部署」一節。這裡只記重點：
+#   * Postgres／MinIO／Mosquitto 不對外映射任何埠——只在 compose 內部網路
+#     給 fms-server／fms-jobs 存取，外部連不到。
+#   * 拿掉 dev 專用的服務：mailpit（正式環境要接真的 SMTP）、adminer
+#     （明文寫在 docker-compose.yml 的註解：正式環境不部署）、otel-collector
+#     （要接正式的 collector 就設 OTEL_EXPORTER_OTLP_ENDPOINT 指到那裡，
+#     不需要在這台機器上再跑一個）、以及 `profiles: ["jobs"]` 底下那批
+#     一次性測試/演練容器（併發搶訂測試、稽核開銷量測等，屬開發／CI 用）。
+#   * 新增 fms-server／fms-jobs（build 自 ../app/Dockerfile）。
+#
+# **這台 VM 前面有機房自己管的 nginx 反向代理**（在另一台主機
+# `61.222.52.132`，不是這台 VM），TLS／憑證在那一層處理，轉純 HTTP 進
+# 這台 VM 的 80 埠。所以 fms-server **直接**對外聽 80（見下方
+# `ports: ["80:8080"]`），這台 VM 本身不跑任何反向代理或憑證——
+# 本檔第一版曾經在這裡放了 Caddy 自己簽 HTTPS，結果跟機房那層 nginx
+# 的重導向邏輯打架（Caddy 收到 HTTP 又重導回 HTTPS，被機房的 nginx
+# 再轉回來，形成無限重導迴圈），已經拿掉。
+#
+# 密鑰（DB 密碼、JWT_SECRET、S3_*、IDP_SECRET_* 等）走這個目錄下的 `.env`
+# ——不進版控，只存在於這台 VM 上。範本見 `.env.prod.example`。
+#
+# 用法：
+#   docker compose -f docker-compose.prod.yml build
+#   docker compose -f docker-compose.prod.yml --profile jobs run --rm migrate
+#   docker compose -f docker-compose.prod.yml up -d
+# =============================================================================
+
+name: bizlution-fms-prod
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fms-prod-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-fms}
+      TZ: ${TZ:-Asia/Taipei}
+      PGTZ: ${TZ:-Asia/Taipei}
+      LANG: C.UTF-8
+      FMS_OWNER_PASSWORD: ${FMS_OWNER_PASSWORD}
+      FMS_APP_PASSWORD: ${FMS_APP_PASSWORD}
+      FMS_READONLY_PASSWORD: ${FMS_READONLY_PASSWORD}
+      FMS_BACKUP_PASSWORD: ${FMS_BACKUP_PASSWORD}
+    command:
+      - postgres
+      # 正式環境的調校：見 docker/README.md「與正式環境的差異」表格——
+      # log_min_duration_statement 從 dev 的 300ms 拉高到 1000ms（用
+      # pg_stat_statements 看整體分佈，日誌不被灌爆），其餘沿用 dev 值，
+      # 之後依這台機器實際記憶體與流量重新調校。
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=256MB
+      - -c
+      - max_connections=200
+      - -c
+      - log_min_duration_statement=1000
+      - -c
+      - log_lock_waits=on
+      - -c
+      - log_line_prefix=%m [%p] %u@%d
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+      - -c
+      - timezone=Asia/Taipei
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+      - ../sql:/sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER:-postgres} -d ${POSTGRES_DB:-fms}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    # 刻意沒有 ports:——不對外映射，只給同一個 compose 網路內的服務存取。
+
+  minio:
+    image: minio/minio:latest
+    container_name: fms-prod-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:9000:9000"
+    # 只綁 loopback，不是 0.0.0.0——公開暴露的唯一路徑是機房那層 nginx
+    # 反向代理到這個 127.0.0.1:9000（見 docker/README.md），MinIO 自己
+    # 從不直接對外。這是預簽 PUT／GET 網址能被瀏覽器直接連上的必要條件：
+    # `fms-shared::Storage::presign_*` 簽的網址內部用 `http://minio:9000`，
+    # 靠 `S3_PUBLIC_ENDPOINT` 把回給前端的網址前綴換成公開位址，
+    # 兩者要接得上，這裡就是那個「接得上」的另一端。
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: fms-prod-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mc mb --ignore-existing local/fms &&
+      mc mb --ignore-existing local/fms-bim &&
+      mc mb --ignore-existing local/fms-exports &&
+      mc anonymous set none local/fms &&
+      mc anonymous set none local/fms-bim &&
+      mc anonymous set none local/fms-exports &&
+      echo 'MinIO buckets ready: fms, fms-bim, fms-exports'
+      "
+    restart: "no"
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: fms-prod-mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqttdata:/mosquitto/data
+    # 這次部署刻意不對外開埠——IoT 裝置的多租戶認證（api_clients 憑證＋
+    # CIDR 限制，見 docker/README.md 的正式環境差異表）是獨立的後續工作，
+    # 在那之前不该把匿名可連的 MQTT broker 暴露在公網上。
+
+  fms-server:
+    build:
+      context: ..
+      dockerfile: app/Dockerfile
+      target: fms-server
+    container_name: fms-server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      BIND_ADDR: 0.0.0.0:8080
+      S3_ENDPOINT: http://minio:9000
+      # 預簽網址給瀏覽器用，換成公開位址——見上面 `minio` service 的說明，
+      # 跟 SSO redirect_uri 共用同一個 `PUBLIC_BASE_URL`（都是「這個部署
+      # 對外看起來的網域」），不另外引入一個要手動填的網域變數。
+      S3_PUBLIC_ENDPOINT: ${PUBLIC_BASE_URL}/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    ports:
+      - "80:8080"
+    # 對外直接映射 80——機房那層 nginx（見本檔檔頭）已經處理 TLS，轉純
+    # HTTP 進來，這裡不需要也不該再做一次 HTTPS 重導向。
+
+  fms-jobs:
+    build:
+      context: ..
+      dockerfile: app/Dockerfile
+      target: fms-jobs
+    container_name: fms-jobs
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      S3_ENDPOINT: http://minio:9000
+      # 稽核／報表匯出的下載連結是 fms-jobs 自己簽的（見
+      # fms-identity::audit_export 與 fms-report::export），一樣要換成
+      # 公開位址，理由跟 fms-server 那份一致。
+      S3_PUBLIC_ENDPOINT: ${PUBLIC_BASE_URL}/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    # 沒有對外的 HTTP listener，純背景 worker。
+    #
+    # `profiles` 刻意讓這個服務**不會**被不帶 profile 的 `docker compose
+    # up -d` 啟動——PM_GENERATOR_USER_ID／DIRECTORY_SYNC_USER_ID 是 fms-jobs
+    # 啟動的硬性必要條件（見 .env.prod.example 的說明，本機用這份 compose
+    # 檔實測過：沒設就整支程式立刻退出、不斷重啟），而兩者都要指向真實
+    # 租戶的服務帳號——第一次上線、還沒有真實租戶時，沒有合法的值可填。
+    # 有真實租戶、也把 .env 填好之後，才用
+    # `docker compose -f docker-compose.prod.yml --profile with-jobs up -d`
+    # 啟動這個服務。
+    profiles: ["with-jobs"]
+
+  # ---------------------------------------------------------------------------
+  # bim-worker — 輪詢 bim_models.status='UPLOADED' 的常駐服務，跟 fms-jobs
+  # 同一個 worker 家族（見 services/bim-worker/README.md 的語言邊界說明），
+  # 只是 Python，所以是獨立的 image／service，不是 app/Dockerfile 的第三個
+  # target。
+  # ---------------------------------------------------------------------------
+  bim-worker:
+    build:
+      context: ../services/bim-worker
+      dockerfile: Dockerfile
+    container_name: bim-worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      S3_ENDPOINT: http://minio:9000
+      # 這裡不用 S3_PUBLIC_ENDPOINT——下載模型是這個 worker 自己（伺服端）
+      # 呼叫 S3 API，不是簽網址給瀏覽器，跟 fms-server/fms-jobs 的
+      # presign_* 是不同情境。
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    # 沒有對外的 HTTP listener。跟 fms-jobs 同一個理由用 profile 擋掉預設
+    # 啟動：BIM_INGEST_WORKER_USER_ID 是硬性必要條件（見
+    # services/bim-worker/bim_worker/main.py 的 `os.environ[...]`，缺了會
+    # KeyError 直接退出），且要指向真實租戶的服務帳號——示範租戶已經在
+    # 080 建好（`f5000000-0000-4000-8000-000000000003`），但別的租戶要先
+    # 跑過等價的佈建流程才有合法值可填。
+    profiles: ["with-bim-worker"]
+
+  # ---------------------------------------------------------------------------
+  # migrate — 一次性作業容器，跟 docker-compose.yml 的用法一致。
+  # 沒有帶 MIGRATE_MODE 時預設 schema-only（001–008、011、013 之後全部
+  # CORE migration），**不會**種示範租戶（009）——正式環境不該有示範資料。
+  # ---------------------------------------------------------------------------
+  migrate:
+    image: postgres:16-alpine
+    container_name: fms-prod-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${FMS_OWNER_PASSWORD}
+      POSTGRES_SUPERUSER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_SUPERUSER_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD}
+    volumes:
+      - ../sql:/sql:ro
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/migrate.sh"]
+    profiles: ["jobs"]
+
+volumes:
+  pgdata:
+  miniodata:
+  mqttdata:

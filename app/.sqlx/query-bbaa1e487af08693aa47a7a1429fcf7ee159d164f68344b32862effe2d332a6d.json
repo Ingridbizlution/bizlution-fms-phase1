@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO fms.resource_amenities\n                 (bookable_resource_id, amenity_id, tenant_id, quantity, note)\n               VALUES ($1, $2, $3, $4, $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Int2",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bbaa1e487af08693aa47a7a1429fcf7ee159d164f68344b32862effe2d332a6d"
+}

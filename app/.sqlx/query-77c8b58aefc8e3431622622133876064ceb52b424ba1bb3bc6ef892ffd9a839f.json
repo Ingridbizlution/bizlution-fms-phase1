@@ -1,0 +1,143 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT n.id, n.parent_id, n.code::text AS \"code!\", n.name::text AS \"name!\",\n                  n.node_type_code::text AS \"node_type_code!\",\n                  n.node_path::text AS \"node_path!\", n.depth,\n                  n.floor_level, n.floor_label::text AS floor_label,\n                  n.area_sqm::float8 AS area_sqm, n.capacity, n.is_bookable,\n                  n.geometry AS \"geometry!\", n.bim_element_id::text AS bim_element_id,\n                  (SELECT count(*) FROM fms.assets a\n                    WHERE a.spatial_node_id = n.id AND a.deleted_at IS NULL)\n                    AS \"asset_count!\",\n                  (SELECT count(*) FROM fms.work_orders w\n                     LEFT JOIN fms.work_order_statuses st ON st.code = w.status\n                    WHERE w.spatial_node_id = n.id AND w.deleted_at IS NULL\n                      AND st.is_terminal IS NOT TRUE) AS \"open_work_orders!\",\n                  (SELECT count(*) FROM fms.alarms al\n                    WHERE al.spatial_node_id = n.id\n                      AND al.status IN ('ACTIVE','ACKNOWLEDGED')) AS \"active_alarms!\",\n                  (SELECT max(al.severity) FROM fms.alarms al\n                    WHERE al.spatial_node_id = n.id\n                      AND al.status IN ('ACTIVE','ACKNOWLEDGED')) AS worst_alarm_severity,\n                  (SELECT array_position(\n                            ARRAY['INFO','WARNING','MINOR','MAJOR','CRITICAL']::text[],\n                            max(al.severity))\n                     FROM fms.alarms al\n                    WHERE al.spatial_node_id = n.id\n                      AND al.status IN ('ACTIVE','ACKNOWLEDGED')) AS worst_alarm_rank,\n                  (SELECT count(*) FROM fms.devices d\n                    WHERE d.spatial_node_id = n.id\n                       OR d.asset_id IN (SELECT id FROM fms.assets\n                                          WHERE spatial_node_id = n.id AND deleted_at IS NULL))\n                    AS \"device_count!\",\n                  (SELECT count(*) FROM fms.devices d\n                    WHERE (d.spatial_node_id = n.id\n                           OR d.asset_id IN (SELECT id FROM fms.assets\n                                              WHERE spatial_node_id = n.id AND deleted_at IS NULL))\n                      AND fms.device_connectivity(d.status, d.last_seen_at,\n                                                   d.offline_alarm_after_seconds) = 'OFFLINE')\n                    AS \"devices_offline_count!\"\n             FROM fms.spatial_nodes n\n            WHERE n.facility_id = $1 AND n.deleted_at IS NULL AND n.is_active\n              AND ($2::int IS NULL OR n.floor_level = $2::int)\n            ORDER BY n.floor_level NULLS FIRST, n.node_path",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "node_type_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "node_path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "depth",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 7,
+        "name": "floor_level",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "floor_label",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "area_sqm",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 10,
+        "name": "capacity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "is_bookable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "geometry!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 13,
+        "name": "bim_element_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "asset_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 15,
+        "name": "open_work_orders!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 16,
+        "name": "active_alarms!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 17,
+        "name": "worst_alarm_severity",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "worst_alarm_rank",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "device_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 20,
+        "name": "devices_offline_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      false,
+      true,
+      null,
+      null,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "77c8b58aefc8e3431622622133876064ceb52b424ba1bb3bc6ef892ffd9a839f"
+}

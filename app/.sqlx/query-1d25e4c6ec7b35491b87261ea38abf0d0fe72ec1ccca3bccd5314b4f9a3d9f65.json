@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT fms.resolve_tenant_by_code($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "resolve_tenant_by_code",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1d25e4c6ec7b35491b87261ea38abf0d0fe72ec1ccca3bccd5314b4f9a3d9f65"
+}

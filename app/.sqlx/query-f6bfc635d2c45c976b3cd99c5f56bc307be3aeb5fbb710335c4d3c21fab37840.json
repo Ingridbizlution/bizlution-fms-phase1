@@ -1,0 +1,143 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT br.id, br.facility_id, br.resource_type,\n                  coalesce(br.spatial_node_id, br.asset_id) AS \"resource_id!\",\n                  br.display_name::text AS display_name,\n                  br.is_bookable, br.requires_approval,\n                  br.approver_role_code::text AS approver_role_code,\n                  br.requires_check_in, br.auto_release_minutes,\n                  br.min_duration_minutes, br.max_duration_minutes,\n                  br.slot_granularity_minutes, br.buffer_before_minutes,\n                  br.buffer_after_minutes, br.advance_booking_days,\n                  br.min_notice_minutes, br.max_active_per_user, br.capacity,\n                  br.opening_hours, br.attributes\n             FROM fms.bookable_resources br\n            WHERE br.facility_id = $1\n              AND ($2 OR br.is_bookable)\n            ORDER BY br.display_name, br.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "resource_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "resource_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_bookable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "requires_approval",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "approver_role_code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "requires_check_in",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "auto_release_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "min_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "max_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "slot_granularity_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "buffer_before_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "buffer_after_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "advance_booking_days",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "min_notice_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "max_active_per_user",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 18,
+        "name": "capacity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "opening_hours",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 20,
+        "name": "attributes",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      null,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f6bfc635d2c45c976b3cd99c5f56bc307be3aeb5fbb710335c4d3c21fab37840"
+}

@@ -1,0 +1,20 @@
+[package]
+name = "fms-tenancy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fms-shared.workspace = true
+# floor-view 內嵌即時佔用狀態，重用 occupancy 既有的 repo 函式而不是
+# 自己重寫一份 FREE/OCCUPIED/RESERVED/HELD 的判定（與 fms-asset 依賴
+# fms-workorder 同一個判斷：契約要求的內嵌資料造成的相依，方向單一，無循環）。
+fms-reservation.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tracing.workspace = true

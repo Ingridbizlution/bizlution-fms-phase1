@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT facility_id, node_type_code::text AS \"node_type_code!\"\n             FROM fms.spatial_nodes WHERE id = $1 AND deleted_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "node_type_code!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "a7b6866bddacaee8a9f9ab92628b1797d4fc4de264423d0b8142518ddcb9ed48"
+}

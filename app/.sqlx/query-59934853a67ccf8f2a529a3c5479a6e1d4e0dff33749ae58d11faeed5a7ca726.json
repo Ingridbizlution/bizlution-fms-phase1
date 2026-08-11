@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.spatial_nodes\n          (tenant_id, facility_id, parent_id, node_type_code, code, name,\n           floor_level, floor_label, area_sqm, capacity, is_bookable,\n           bim_model_id, bim_element_id, geometry, attributes)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::float8::numeric,\n                coalesce($10, 0), coalesce($11, false), $12, $13,\n                coalesce($14, '{}'::jsonb), coalesce($15, '{}'::jsonb))\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Varchar",
+        "Float8",
+        "Int4",
+        "Bool",
+        "Uuid",
+        "Varchar",
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "59934853a67ccf8f2a529a3c5479a6e1d4e0dff33749ae58d11faeed5a7ca726"
+}

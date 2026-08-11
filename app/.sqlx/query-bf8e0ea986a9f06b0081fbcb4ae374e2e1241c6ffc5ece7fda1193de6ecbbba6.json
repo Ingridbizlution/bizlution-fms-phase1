@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT m.id,\n               m.meter_code::text AS \"meter_code!\",\n               m.reading_type,\n               m.last_value::float8   AS \"last_value\",\n               m.last_read_at,\n               m.rollover_at::float8  AS \"rollover_at\"\n        FROM fms.asset_meters m\n        WHERE m.asset_id = $1 AND lower(m.meter_code) = lower($2) AND m.is_active\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "meter_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "reading_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_value",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_read_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "rollover_at",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      null,
+      true,
+      null
+    ]
+  },
+  "hash": "bf8e0ea986a9f06b0081fbcb4ae374e2e1241c6ffc5ece7fda1193de6ecbbba6"
+}

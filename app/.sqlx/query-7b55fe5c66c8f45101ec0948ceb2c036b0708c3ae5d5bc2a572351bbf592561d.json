@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.reservations\n           SET status = 'CANCELLED',\n               cancelled_at = clock_timestamp(),\n               cancelled_by = $2,\n               cancellation_reason = $3\n         WHERE id = $1\n           AND status NOT IN ('CANCELLED','REJECTED','COMPLETED','NO_SHOW','EXPIRED')\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7b55fe5c66c8f45101ec0948ceb2c036b0708c3ae5d5bc2a572351bbf592561d"
+}

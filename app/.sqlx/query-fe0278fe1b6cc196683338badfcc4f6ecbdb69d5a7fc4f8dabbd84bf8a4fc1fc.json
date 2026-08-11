@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.reservations\n              SET status = 'REJECTED',\n                  approved_by = $2,\n                  approved_at = clock_timestamp(),\n                  rejection_reason = $3\n            WHERE id = $1 AND status = 'PENDING_APPROVAL'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fe0278fe1b6cc196683338badfcc4f6ecbdb69d5a7fc4f8dabbd84bf8a4fc1fc"
+}

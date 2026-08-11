@@ -1,0 +1,307 @@
+name: CI (data layer + app)
+
+# 驗證資料層本身：migration 可在乾淨資料庫上依序套用、RLS 全表強制、
+# 租戶隔離對 fms_app 成立、T1–T10 十項不變量成立。
+#
+# 刻意「用 docker compose 跑」而不是在 CI 裡另寫一套 psql 步驟：
+# docker/README.md 的目標是「讓『在我機器上會過』與『在 pipeline 上會過』是同一件事」，
+# 若 CI 自己拼一套初始化順序，兩邊就會各自漂移 —— 而順序正是這批 migration
+# 最脆弱的地方（005/006 補外鍵、008 先於工單、013 必須最後）。
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: docker
+
+jobs:
+  data-layer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # compose 由 docker/.env 取得埠號與三個角色的密碼。CI 用固定值即可：
+      # 這個資料庫在 job 結束後就消失，且從未對外開放。
+      - name: Prepare .env
+        run: |
+          cp .env.example .env
+          echo "使用 .env.example 的預設值（CI 專用，一次性容器）"
+
+      - name: Start stack (postgres / redis / minio / mailpit)
+        run: make up
+
+      # migration 順序不可調換，因此走 make migrate（= docker/scripts/migrate.sh）
+      - name: Apply migrations (CORE：001-008, 011, 013-016, 020-027)
+        run: make migrate
+
+      - name: Seed demo tenant (009)
+        run: make seed
+
+      # 以下三項對應規格書 13.1 Definition of Done。
+      # 分成三個 step 而非一個 make verify，是為了讓 CI 頁面能直接看出哪一項掉了。
+      - name: Verify FORCE RLS on every tenant table
+        run: make check-rls
+
+      - name: Verify tenant isolation as fms_app
+        run: make check-isolation
+
+      - name: Smoke tests T1-T10
+        run: make test
+
+      # 兩支煙霧測試全程 ROLLBACK。再跑一次可證明它們沒留下狀態，
+      # 否則「可重複執行」只是註解裡的宣稱。
+      - name: Smoke tests are repeatable (no residue)
+        run: make test
+
+      # T11：100 執行緒併發搶訂須恰好一筆成功（DoD）。
+      # 落敗原因會在 23P01 與 40P01 之間隨機分佈，兩者皆可接受；
+      # 判定只看「落地恰好 1 筆」與「每個客戶端都有下場」。
+      - name: Concurrency T11 (100 clients, exactly one wins)
+        run: make concurrency-test
+
+      # sql/down/README.md 寫「CI 會執行它 —— 沒有被執行過的 down migration
+      # 等於沒有 down migration」，而在此之前這個步驟並不存在，也就是說
+      # 014–027 的 down 全部只在作者的機器上跑過。文件宣稱有、實際沒有的
+      # 保護比明確沒有更危險。
+      #
+      # 在拋棄式資料庫（fms_roundtrip）上跑，因此不影響上面任何一個步驟的狀態，
+      # 位置放在最後只是為了讓前面的 DoD 檢查先給出結果。
+      - name: Down migrations are reversible (up -> down -> up)
+        run: make migrate-roundtrip
+
+      # 排在 roundtrip 之後：兩者都用拋棄式資料庫，順序無關，
+      # 但這一步依賴 seed 過的資料才有列數可以比對。
+      #
+      # 加這一步的原因是它第一次執行就抓到 `make backup` 從來沒有真的可用過
+      # （pg_dump 以 fms_owner 連線會被 FORCE RLS 擋住）。
+      - name: Backup can actually be restored
+        run: make backup-restore-drill
+
+      - name: Dump postgres log on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=200 postgres
+
+      - name: Tear down
+        if: always()
+        run: make down
+
+  # ---------------------------------------------------------------------------
+  # 應用層。刻意與資料層分開成獨立 job。
+  #
+  # sqlx 的 query_as! 在編譯期就要驗證欄位（ADR-09 選 Rust 的主要理由），
+  # 但**不再**需要為此先跑 migration：`app/.sqlx` 是 `cargo sqlx prepare`
+  # 產生的離線查詢快取，已進版控。編譯只靠它，因此
+  #   * 開發者 clone 之後 `cargo check` 不需要 Docker
+  #   * 這個 job 的第一個步驟可以在啟動任何容器之前就抓到編譯錯誤
+  #
+  # 兩種漂移分別由兩個步驟守住，缺一不可：
+  #   * **查詢改了但沒重新產生快取** → 「Compile without a database」步驟失敗
+  #     （SQLX_OFFLINE=true 時找不到該查詢的快取）
+  #   * **schema 改了但查詢沒改** → 後面的步驟有 DATABASE_URL，走線上驗證，
+  #     由 sqlx 直接比對真實 schema 抓出來
+  #
+  # 快取過期的修法：`cd app && DATABASE_URL=… cargo sqlx prepare --workspace`
+  # 然後把 `app/.sqlx` 的變更一起提交。
+  # ---------------------------------------------------------------------------
+  app:
+    runs-on: ubuntu-latest
+    # 曾經是 30——這個 job 這次在 main 上實測跑到 30m20s 被砍在最後一步
+    # 「Build release」（cargo build --release，只在 main 跑，見該步驟的
+    # 說明）。不是這次改動造成的：這幾輪加了 fms-calendar 等好幾支 crate，
+    # release build 的時間隨之漂移，30 分鐘的預算沒有跟著調整。拉高到 45，
+    # 而不是拿掉這一步——那一步抓的是「只有 release 模式才出現」的問題，
+    # 是真的在守東西。
+    timeout-minutes: 45
+    env:
+      APP_DATABASE_URL: postgres://fms_app:change_me_app@localhost:5433/fms
+      OWNER_DATABASE_URL: postgres://fms_owner:change_me_owner@localhost:5433/fms
+      # query_as! 於編譯期用它連線做 schema 驗證
+      DATABASE_URL: postgres://fms_owner:change_me_owner@localhost:5433/fms
+      JWT_SECRET: ci-only-secret-at-least-32-characters-long
+      # S5 附件測試會真的上傳到 compose 的 MinIO 並抓預簽網址，
+      # 因此 app job 需要這組設定（`make up` 已建好 bucket 並設為私有）。
+      S3_ENDPOINT: http://localhost:9000
+      S3_ACCESS_KEY: fmsminio
+      S3_SECRET_KEY: change_me_minio
+      S3_BUCKET_ATTACHMENTS: fms
+      # 增量編譯產物在 CI 是純浪費：每個 job 都是全新的容器，沒有任何東西
+      # 可以增量重用。實測本地 `app/target/debug/incremental` 是 **21 GB**
+      # （總計 57 GB 的 37%），而 runner 只有約 14 GB 可用。
+      # 這是這個 job 兩次 `No space left on device` 的最大單一成因。
+      CARGO_INCREMENTAL: 0
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # runner 預裝的工具鏈這個 repo 一項都不用，但佔掉十幾 GB。
+      # 上面的 CARGO_INCREMENTAL 與 Cargo.toml 的 `debug = "line-tables-only"`
+      # 是治本；這一步是餘裕 —— 測試檔還會繼續增加，而每多一個整合測試就多
+      # 一個靜態連結了 aws-lc-sys／ring／rustls／aws-sdk-s3 的 binary。
+      # **不要拿掉這一步。** 實測它把可用空間從 15 GB 拉到 36 GB（回收 21 GB）。
+      # 沒有它只剩 15 GB，而這個 job 要放 target（約 4.3 GB）、cargo registry
+      # 與五個 compose 映像 —— 餘裕太薄，而且每多一個整合測試就多一個靜態連結
+      # 了 aws-lc-sys／ring／rustls／aws-sdk-s3 的 binary。
+      #
+      # 改成平行刪除：這些目錄各有數十萬個小檔，序列刪要 1.4 分鐘，
+      # 而它們彼此無關。回收量完全相同。
+      - name: Free disk space
+        run: |
+          df -h / | tail -1
+          for d in /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                   /usr/local/share/boost "$AGENT_TOOLSDIRECTORY"; do
+            sudo rm -rf "$d" &
+          done
+          wait
+          df -h / | tail -1
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      # `save-if` 只在 main：PR 只**還原**不**儲存**。
+      #
+      # 沒有這一行的話每個 commit 都存一份新 cache，而舊的不會自己清乾淨。
+      # 實測累積到 **11.2 GB／8 份**，超過每個 repo 10 GB 的上限 ——
+      # 超過之後 GitHub 會 LRU 逐出，不會壞掉，但代價是命中率下降、
+      # 建置變慢、吃更多 Actions 分鐘數。
+      #
+      # 而且單份 cache 在加了 OpenTelemetry 依賴之後從 1.26 GB 漲到 2.05 GB
+      # （+63%）—— 那與建置產物的 +5% 是兩個不同的切面，當時只量了後者。
+      #
+      # 代價：PR 在依賴變動後的第一次建置會慢一些（只能從 main 的 cache 還原）。
+      # 那是划算的：依賴不常變，而 cache 抖動是每次 push 都在付。
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # 刻意排在啟動容器**之前**：這個步驟本身就是「編譯不需要資料庫」的證明。
+      # 若日後有人新增查詢卻忘記 `cargo sqlx prepare`，這裡會先失敗，
+      # 而且失敗訊息由 sqlx 直接說明修法。
+      #
+      # `env -u DATABASE_URL` 是必要的：job 層級設了 DATABASE_URL，
+      # 而 sqlx 只要看得到它就會走線上驗證，離線快取的完整性就沒被測到。
+      - name: Compile without a database (offline query cache)
+        working-directory: app
+        run: env -u DATABASE_URL SQLX_OFFLINE=true cargo check --workspace --all-targets
+
+      - name: Check formatting
+        working-directory: app
+        run: cargo fmt --all -- --check
+
+      - name: Prepare .env
+        working-directory: docker
+        run: cp .env.example .env
+
+      - name: Start stack and build schema
+        working-directory: docker
+        run: |
+          make up
+          make migrate
+          make seed
+          # 整合測試從這個 template 複製出各自的資料庫（見 common/mod.rs）。
+          # `make migrate`／`make seed` 仍然需要：後面的步驟有 DATABASE_URL，
+          # 走線上驗證（那是「schema 改了但查詢沒改」的守衛），
+          # 而 template 是給執行期用的。
+          make test-template
+
+      # 以下步驟都有 job 層級的 DATABASE_URL，因此走**線上**驗證 ——
+      # 那是「schema 改了但查詢文字沒改」的唯一守衛（離線快取抓不到那種）。
+      - name: Clippy (deny warnings)
+        working-directory: app
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test (all slices)
+        working-directory: app
+        run: cargo test --workspace
+
+      # OTLP 端到端：init_telemetry → OTLP/HTTP → collector。
+      #
+      # 四格：collector 就緒、應用端送出、collector 收到**這次執行的唯一
+      # marker**、service.name 正確。marker 唯一 + 只看本次之後的 log，
+      # 是為了讓上一次的輸出不會讓這次無條件通過。
+      #
+      # 這一格擋得住的是**靜默失敗**：接線壞掉時 span 不會報錯，只是不見。
+      # 實際抓過兩個 —— 缺 rustls crypto provider 導致開機 panic
+      # （CI 不設 OTEL_EXPORTER_OTLP_ENDPOINT，所以只有這裡測得到），
+      # 以及批次處理器的專屬執行緒沒有 tokio reactor 導致每個 span 遺失。
+      # 兩者的說明在 fms-shared/src/observability.rs 與 app/Cargo.toml。
+      #
+      # 排在 Test 之後：它會拉一個 486 MB 的映像，而測試失敗時不需要等那個。
+      - name: OTLP spans actually reach a collector
+        working-directory: docker
+        run: make otel-smoke
+
+      # **只在 main 跑。** 實測它佔 app job 的 2.3 分鐘，而它抓的是
+      # 「只有 release 模式才出現」的問題（最佳化層級不同、debug_assertions 關閉）
+      # —— 那類問題存在但罕見，且 merge 到 main 之後立刻會跑到。
+      #
+      # PR 上省下的 2.3 分鐘是每一次 push 都在付的。
+      - name: Build release
+        if: github.ref == 'refs/heads/main'
+        working-directory: app
+        run: cargo build --workspace --release
+
+      # 量「Free disk space 到底還需不需要」。**第一次執行的結果（2026-08-02）**：
+      #
+      #     job 開始       15 GB 可用
+      #     清完之後       36 GB 可用
+      #     建置＋測試後   25 GB 可用   ← 這一步印出來的
+      #
+      # 也就是建置與測試吃掉 11 GB。沒有清磁碟那一步的話是 15 − 11 = **4 GB**
+      # —— 這次不會失敗，但太薄，而每加一個測試 binary 就再吃一塊。
+      # 結論：那一步留著。這一步繼續量，讓未來的判斷有依據而不是憑印象。
+      #
+      # 只印不判斷：它不該讓 job 失敗。
+      - name: Disk headroom after the build
+        if: always()
+        run: df -h / | tail -1
+
+      - name: Tear down
+        if: always()
+        working-directory: docker
+        run: make down
+
+  # ---------------------------------------------------------------------------
+  # 正式環境部署。只在 push 到 main、且上面兩個 job 都綠才跑——
+  # `needs:` 保證這一點，不需要另外重複跑一次測試。
+  #
+  # 走 SSH 進 VM 執行既有的 docker/README.md「之後怎麼更新」那段指令，
+  # 不在這裡另外發明一套部署邏輯——CI 跟手動部署用同一組 compose 指令，
+  # 理由跟 data-layer job 檔頭那句話一樣：避免兩邊各自漂移。
+  #
+  # `fms-jobs` 需要真實租戶的服務帳號才能啟動（見 docker/.env.prod.example
+  # 的說明），這裡用 `|| true` 讓「還沒開通」不會讓整個部署失敗——
+  # 那個服務本來就是選擇性啟動的。
+  deploy:
+    needs: [data-layer, app]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Deploy to production VM
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            set -e
+            cd ~/fms
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            cd docker
+            docker compose -f docker-compose.prod.yml build
+            docker compose -f docker-compose.prod.yml --profile jobs run --rm migrate
+            docker compose -f docker-compose.prod.yml up -d postgres minio minio-init mosquitto fms-server
+            docker compose -f docker-compose.prod.yml --profile with-jobs up -d fms-jobs || true
+            docker image prune -f
+            curl -sf http://localhost/api/v1/health

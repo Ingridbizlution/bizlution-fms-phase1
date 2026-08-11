@@ -1,0 +1,47 @@
+# =============================================================================
+# OpenTelemetry Collector（開發／CI 用）
+# =============================================================================
+# 只收 HTTP/protobuf（4318），不開 gRPC（4317）—— 應用端用的是 `http-proto`
+# 那條路（見 app/Cargo.toml 的說明：它重用既有的 reqwest 依賴樹，
+# 不多拉一整套 tonic）。開一個沒有人用的接收埠只會讓人以為它被用到。
+#
+# 匯出用 `debug` verbosity=detailed：span 直接印進容器 log。
+# 這是刻意的選擇 —— **驗證要不需要額外工具**。接一個真的後端（Jaeger／Tempo）
+# 意味著要再跑一個服務、再學一套查詢語法，而這裡要回答的問題只有一個：
+# 「span 有沒有真的離開應用程式並抵達 collector」。`docker compose logs`
+# 就能回答，smoke 測試也能 grep 它。
+#
+# 正式環境把 exporters 換成真正的後端即可，receivers 與 pipeline 不用動。
+# =============================================================================
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+
+exporters:
+  debug:
+    verbosity: detailed
+
+service:
+  # **不要調低 logs.level。**
+  #
+  # 第一版寫了 `level: warn`，註解還說「壓低 collector 自己的 log，避免蓋掉
+  # span 輸出」—— 而那**正好把要看的東西關掉了**：`debug` exporter 是透過
+  # collector 自己的 logger 以 **info** 級別輸出 span 的。
+  #
+  # 症狀：span 成功抵達（應用端 flush 沒有報錯），但 `docker compose logs`
+  # 一片空白，於是 smoke 判定「沒收到」。CI 首跑之後的第二跑抓到。
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]

@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, entity_type::text AS \"entity_type!\", entity_id,\n                  purpose::text AS \"purpose!\", file_name::text AS \"file_name!\",\n                  mime_type::text AS \"mime_type\", size_bytes,\n                  storage_bucket::text AS \"storage_bucket!\", storage_key,\n                  created_at\n             FROM fms.attachments\n            WHERE entity_type = $1 AND entity_id = $2 AND deleted_at IS NULL\n              AND ($3::text IS NULL OR purpose = $3)\n            ORDER BY created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "entity_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "purpose!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "file_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "storage_bucket!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      null,
+      null,
+      null,
+      true,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "3f7dbb4a659071b24ed23f2fb9b5ad830530cb1f7e2e4f8c1ec2bbf2a054c60a"
+}

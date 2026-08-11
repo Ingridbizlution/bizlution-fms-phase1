@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.maintenance_occurrences\n              SET status = 'GENERATED',\n                  work_order_id = $2,\n                  generated_at = clock_timestamp()\n            WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4e5c4988ec1abb35e0eda48207be2ef01c4df38f433abe6d48bfd070b01692ac"
+}

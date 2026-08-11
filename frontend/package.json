@@ -1,0 +1,45 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "mock-api": "node mock-server/server.mjs",
+    "generate:api-types": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@hookform/resolvers": "^5.7.1",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "@tabler/core": "^1.4.0",
+    "@tabler/icons-react": "^3.46.0",
+    "@tanstack/react-query": "^5.101.4",
+    "apexcharts": "^3.54.1",
+    "i18next": "^26.3.6",
+    "pdfjs-dist": "^6.2.108",
+    "react": "^19.2.8",
+    "react-apexcharts": "^1.4.1",
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.84.0",
+    "react-i18next": "^17.0.11",
+    "react-router-dom": "^7.18.2",
+    "three": "^0.185.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "openapi-typescript": "^7.13.0",
+    "oxlint": "^1.75.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0"
+  }
+}

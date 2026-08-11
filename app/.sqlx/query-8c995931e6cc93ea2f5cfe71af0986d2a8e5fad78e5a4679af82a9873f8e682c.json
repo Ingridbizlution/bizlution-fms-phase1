@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.display_name::text AS \"user_name\",\n                  l.started_at, l.ended_at, l.minutes,\n                  l.cost::float8 AS \"cost\",\n                  l.is_overtime\n             FROM fms.work_order_labor l\n             LEFT JOIN fms.users u ON u.id = l.user_id\n            WHERE l.work_order_id = $1\n            ORDER BY l.started_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "ended_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "cost",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_overtime",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      true,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "8c995931e6cc93ea2f5cfe71af0986d2a8e5fad78e5a4679af82a9873f8e682c"
+}

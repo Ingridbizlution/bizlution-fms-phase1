@@ -1,0 +1,18 @@
+[package]
+name = "fms-notification"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fms-shared.workspace = true
+# SUBSCRIBABLE_EVENT_TYPES 的單一定義處在 worker 那一側（扇出的 handler 用同一份）。
+# 複製一份到這裡會讓兩邊悄悄分歧，而分歧的症狀是「訂得起來但永遠收不到」。
+fms-worker.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+chrono.workspace = true

@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id AS bookable_resource_id,\n                  facility_id,\n                  resource_type,\n                  requires_approval,\n                  requires_check_in,\n                  auto_release_minutes,\n                  advance_booking_days\n           FROM fms.bookable_resources\n           WHERE (spatial_node_id = $1 OR asset_id = $1)\n             AND is_bookable = true",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "bookable_resource_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "resource_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "requires_approval",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "requires_check_in",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "auto_release_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "advance_booking_days",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "91fe71fa9532cabe94e3c80444e5bd083bc61be480cdb7f2a8931038feae904b"
+}

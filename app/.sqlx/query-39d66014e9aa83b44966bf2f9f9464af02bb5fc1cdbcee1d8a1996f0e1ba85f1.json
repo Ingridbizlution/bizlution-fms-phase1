@@ -1,0 +1,154 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "        SELECT r.id,\n               r.reservation_no::text AS \"reservation_no!\",\n               r.facility_id,\n               r.resource_id,\n               coalesce(br.display_name::text, '(unknown)') AS \"resource_name!\",\n               r.resource_type,\n               r.title::text AS \"title\",\n               r.purpose::text AS \"purpose\",\n               r.party_size,\n               r.start_at,\n               r.end_at,\n               r.status,\n               r.organizer_id,\n               r.on_behalf_of_id,\n               coalesce(u.display_name::text, '(unknown)') AS \"organizer_display_name!\",\n               r.is_private,\n               r.approval_required,\n               r.requires_check_in,\n               r.checked_in_at,\n               r.auto_release_at,\n               r.recurrence_group_id,\n               r.created_via,\n               r.version\n        FROM fms.reservations r\n        LEFT JOIN fms.bookable_resources br ON br.id = r.bookable_resource_id\n        LEFT JOIN fms.users u ON u.id = r.organizer_id\n        WHERE r.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "reservation_no!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "resource_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "resource_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "resource_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "purpose",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "party_size",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "start_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "end_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "organizer_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 13,
+        "name": "on_behalf_of_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 14,
+        "name": "organizer_display_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "is_private",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 16,
+        "name": "approval_required",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 17,
+        "name": "requires_check_in",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 18,
+        "name": "checked_in_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 19,
+        "name": "auto_release_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 20,
+        "name": "recurrence_group_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 21,
+        "name": "created_via",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 22,
+        "name": "version",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      null,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      null,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "39d66014e9aa83b44966bf2f9f9464af02bb5fc1cdbcee1d8a1996f0e1ba85f1"
+}

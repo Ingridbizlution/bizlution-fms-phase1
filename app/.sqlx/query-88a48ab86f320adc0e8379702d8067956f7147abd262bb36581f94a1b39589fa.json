@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT f.id, f.code::text AS \"code!\", f.name::text AS \"name!\", f.org_id\n           FROM fms.user_accessible_facilities($1) a\n           JOIN fms.facilities f ON f.id = a.facility_id\n           WHERE f.deleted_at IS NULL\n           ORDER BY f.code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "org_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "88a48ab86f320adc0e8379702d8067956f7147abd262bb36581f94a1b39589fa"
+}

@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ra.amenity_id,\n                  a.code::text AS \"code!\", a.name::text AS \"name!\",\n                  a.name_en::text AS name_en, a.category::text AS \"category!\",\n                  a.icon::text AS icon,\n                  ra.quantity AS \"quantity!\", ra.is_operational AS \"is_operational!\",\n                  ra.note::text AS note\n             FROM fms.resource_amenities ra\n             JOIN fms.amenities a ON a.id = ra.amenity_id\n            WHERE ra.bookable_resource_id = $1\n            ORDER BY a.display_order, a.code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "amenity_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name_en",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "category!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "icon",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "quantity!",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 7,
+        "name": "is_operational!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "note",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      false,
+      null,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "bf8d2eb9f929ac0abdf387c2db23149dc97de88737c9da6e842f75dbf3187835"
+}

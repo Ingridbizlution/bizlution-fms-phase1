@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.id, t.facility_id, t.code::text AS \"code!\", t.name::text AS \"name!\",\n                  t.team_type, t.vendor_name::text AS vendor_name, t.lead_user_id,\n                  t.dispatch_rule AS \"dispatch_rule!\",\n                  t.contact_email::text AS contact_email,\n                  t.contact_phone::text AS contact_phone, t.is_active,\n                  coalesce(\n                    (SELECT jsonb_agg(jsonb_build_object(\n                              'user_id', m.user_id,\n                              'display_name', u.display_name,\n                              'role_in_team', m.role_in_team,\n                              'joined_at', m.joined_at)\n                            ORDER BY m.role_in_team, u.display_name)\n                       FROM fms.team_members m\n                       JOIN fms.users u ON u.id = m.user_id\n                      WHERE m.team_id = t.id),\n                    '[]'::jsonb) AS \"members!\"\n             FROM fms.teams t\n            WHERE ($1::uuid IS NULL OR t.facility_id = $1::uuid OR t.facility_id IS NULL)\n              AND ($2 OR t.is_active)\n            ORDER BY t.name, t.code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "team_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "vendor_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "lead_user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "dispatch_rule!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 8,
+        "name": "contact_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "contact_phone",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "members!",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      null,
+      null,
+      false,
+      null,
+      true,
+      false,
+      null,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "b1a3643e2dba16dedb87edc28e648c4979de706c0b80731711cf3fcddaa7da47"
+}

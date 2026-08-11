@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, tenant_id IS NULL AS \"is_platform!\",\n                  code::text AS \"code!\", name::text AS \"name!\",\n                  level_hint, is_bookable, is_leaf_default,\n                  allowed_child_codes AS \"allowed_child_codes!\",\n                  icon::text AS icon\n             FROM fms.spatial_node_types\n            ORDER BY level_hint, code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_platform!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "level_hint",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_bookable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_leaf_default",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "allowed_child_codes!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 8,
+        "name": "icon",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "4011a302fd4d6316ee0d45c8796705a8ef8e5061c139eaa1a41469cacc51a81a"
+}

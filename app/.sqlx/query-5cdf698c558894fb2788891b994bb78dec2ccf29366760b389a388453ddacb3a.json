@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id,\n                  name::text AS \"name!\",\n                  facility_id,\n                  is_attachable_to_reservation,\n                  lead_time_minutes,\n                  default_duration_minutes,\n                  relative_offset_minutes,\n                  requires_approval,\n                  chargeable,\n                  unit_price::float8 AS \"unit_price\",\n                  max_quantity,\n                  form_schema AS \"form_schema!\"\n           FROM fms.service_items\n           WHERE id = ANY($1) AND deleted_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "is_attachable_to_reservation",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "lead_time_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "default_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "relative_offset_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "requires_approval",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "chargeable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "unit_price",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 10,
+        "name": "max_quantity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "form_schema!",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      true,
+      false
+    ]
+  },
+  "hash": "5cdf698c558894fb2788891b994bb78dec2ccf29366760b389a388453ddacb3a"
+}

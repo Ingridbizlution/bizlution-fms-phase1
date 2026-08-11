@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.id, p.part_code::text AS \"part_code!\", p.name::text AS \"name!\",\n                  p.category_id, p.unit::text AS \"unit!\",\n                  p.unit_cost::float8 AS unit_cost, p.currency::text AS currency,\n                  p.manufacturer::text AS manufacturer,\n                  p.manufacturer_part_no::text AS manufacturer_part_no,\n                  p.is_consumable, p.is_active,\n                  coalesce((SELECT sum(s.quantity_on_hand)::float8\n                              FROM fms.part_stock s WHERE s.part_id = p.id), 0)\n                    AS \"total_on_hand!\"\n             FROM fms.parts p\n            WHERE ($1 OR p.is_active)\n              AND ($2::uuid IS NULL OR p.category_id = $2::uuid)\n              AND ($3::text IS NULL\n                   OR lower(p.part_code::text) LIKE $3::text\n                   OR lower(p.name::text) LIKE $3::text)\n            ORDER BY p.part_code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "part_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "category_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "unit!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "unit_cost",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "currency",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "manufacturer",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "manufacturer_part_no",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "is_consumable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "total_on_hand!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "5004586587855f427910dabe13757d526871213d0870e1840ee7dfc81ab61c0c"
+}

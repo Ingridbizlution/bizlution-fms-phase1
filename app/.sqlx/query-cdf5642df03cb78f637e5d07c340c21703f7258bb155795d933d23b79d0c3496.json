@@ -1,0 +1,275 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT w.id,\n               w.wo_no::text            AS \"wo_no!\",\n               w.facility_id,\n               w.work_order_type,\n               w.source,\n               w.title::text            AS \"title!\",\n               w.description,\n               w.status,\n               s.category               AS \"status_category!\",\n               w.priority,\n               w.asset_id,\n               a.asset_code::text       AS \"asset_code\",\n               a.name::text             AS \"asset_name\",\n               w.spatial_node_id,\n               sn.name::text            AS \"node_name\",\n               sn.node_path::text       AS \"node_path\",\n               w.service_item_id,\n               w.reservation_id,\n               w.alarm_id,\n               w.requester_id,\n               ru.display_name::text    AS \"requester_name\",\n               w.assignee_id,\n               au.display_name::text    AS \"assignee_name\",\n               w.team_id,\n               w.payload                AS \"payload!\",\n               w.scheduled_start_at,\n               w.scheduled_end_at,\n               w.actual_start_at,\n               w.actual_end_at,\n               w.response_due_at,\n               w.resolution_due_at,\n               w.sla_state,\n               w.labor_minutes,\n               (w.labor_cost + w.parts_cost + w.other_cost)::float8 AS \"total_cost\",\n               w.satisfaction_score,\n               w.resolution_notes,\n               w.version,\n               w.created_at,\n               w.updated_at,\n               w.completed_at\n        FROM fms.work_orders w\n        JOIN fms.work_order_statuses s ON s.code = w.status\n        LEFT JOIN fms.assets a        ON a.id  = w.asset_id\n        LEFT JOIN fms.spatial_nodes sn ON sn.id = w.spatial_node_id\n        LEFT JOIN fms.users ru        ON ru.id = w.requester_id\n        LEFT JOIN fms.users au        ON au.id = w.assignee_id\n        WHERE w.deleted_at IS NULL\n          AND ($1::uuid   IS NULL OR w.facility_id = $1)\n          AND ($2::text   IS NULL OR w.work_order_type = $2)\n          AND ($3::text[] IS NULL OR w.status = ANY($3))\n          AND ($4::text   IS NULL OR s.category = $4)\n          AND ($5::text   IS NULL OR w.priority = $5)\n          AND ($6::uuid   IS NULL OR w.assignee_id = $6)\n          AND ($7::uuid   IS NULL OR w.team_id = $7)\n          AND ($8::uuid   IS NULL OR w.asset_id = $8)\n          AND ($9::uuid   IS NULL OR w.spatial_node_id = $9)\n          AND ($10::text  IS NULL OR w.source = $10)\n          AND ($11::text  IS NULL OR w.sla_state = $11)\n          -- mine：契約定義為「負責人或申請人」，兩者皆算\n          AND ($12::uuid  IS NULL OR w.assignee_id = $12 OR w.requester_id = $12)\n          AND ($13::timestamptz IS NULL OR w.created_at >= $13)\n          AND ($14::timestamptz IS NULL OR w.created_at <= $14)\n          AND ($15::uuid IS NULL OR CASE\n                WHEN $18::text = 'created_at' AND $19::bool\n                  THEN (w.created_at, w.id) < ($16::timestamptz, $15::uuid)\n                WHEN $18::text = 'created_at' AND NOT $19::bool\n                  THEN (w.created_at, w.id) > ($16::timestamptz, $15::uuid)\n                WHEN $18::text = 'wo_no' AND $19::bool\n                  THEN (w.wo_no::text, w.id) < ($17::text, $15::uuid)\n                WHEN $18::text = 'wo_no' AND NOT $19::bool\n                  THEN (w.wo_no::text, w.id) > ($17::text, $15::uuid)\n                WHEN $18::text = 'priority' AND $19::bool\n                  THEN (w.priority, w.id) < ($17::text, $15::uuid)\n                WHEN $18::text = 'priority' AND NOT $19::bool\n                  THEN (w.priority, w.id) > ($17::text, $15::uuid)\n              END)\n        ORDER BY\n          (CASE WHEN $18::text = 'created_at' AND $19::bool THEN w.created_at END) DESC,\n          (CASE WHEN $18::text = 'created_at' AND NOT $19::bool THEN w.created_at END) ASC,\n          (CASE WHEN $18::text = 'wo_no' AND $19::bool THEN w.wo_no::text END) DESC,\n          (CASE WHEN $18::text = 'wo_no' AND NOT $19::bool THEN w.wo_no::text END) ASC,\n          (CASE WHEN $18::text = 'priority' AND $19::bool THEN w.priority END) DESC,\n          (CASE WHEN $18::text = 'priority' AND NOT $19::bool THEN w.priority END) ASC,\n          (CASE WHEN $19::bool THEN w.id END) DESC,\n          (CASE WHEN NOT $19::bool THEN w.id END) ASC\n        LIMIT $20\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "wo_no!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "work_order_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "source",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "title!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "status_category!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "priority",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "asset_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 11,
+        "name": "asset_code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "asset_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "spatial_node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 14,
+        "name": "node_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "node_path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "service_item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 17,
+        "name": "reservation_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 18,
+        "name": "alarm_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 19,
+        "name": "requester_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 20,
+        "name": "requester_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "assignee_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 22,
+        "name": "assignee_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 23,
+        "name": "team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 24,
+        "name": "payload!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 25,
+        "name": "scheduled_start_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 26,
+        "name": "scheduled_end_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 27,
+        "name": "actual_start_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 28,
+        "name": "actual_end_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 29,
+        "name": "response_due_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 30,
+        "name": "resolution_due_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 31,
+        "name": "sla_state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 32,
+        "name": "labor_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 33,
+        "name": "total_cost",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 34,
+        "name": "satisfaction_score",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 35,
+        "name": "resolution_notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 36,
+        "name": "version",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 37,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 38,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 39,
+        "name": "completed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "TextArray",
+        "Text",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz",
+        "Uuid",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      false,
+      null,
+      true,
+      false,
+      false,
+      false,
+      true,
+      null,
+      null,
+      true,
+      null,
+      null,
+      true,
+      true,
+      true,
+      true,
+      null,
+      true,
+      null,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      null,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "cdf5642df03cb78f637e5d07c340c21703f7258bb155795d933d23b79d0c3496"
+}

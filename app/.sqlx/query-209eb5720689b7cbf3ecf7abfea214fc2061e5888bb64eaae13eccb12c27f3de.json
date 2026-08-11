@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.facilities SET\n          org_id         = coalesce($2, org_id),\n          code           = coalesce($3, code),\n          name           = coalesce($4, name),\n          facility_type  = coalesce($5, facility_type),\n          address_line1  = coalesce($6, address_line1),\n          city           = coalesce($7, city),\n          country_code   = coalesce($8, country_code),\n          timezone       = coalesce($9, timezone),\n          gross_area_sqm = coalesce($10::float8::numeric, gross_area_sqm),\n          operating_hours = coalesce($11, operating_hours),\n          attributes     = coalesce($12, attributes)\n        WHERE id = $1 AND deleted_at IS NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Text",
+        "Varchar",
+        "Bpchar",
+        "Varchar",
+        "Float8",
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "209eb5720689b7cbf3ecf7abfea214fc2061e5888bb64eaae13eccb12c27f3de"
+}

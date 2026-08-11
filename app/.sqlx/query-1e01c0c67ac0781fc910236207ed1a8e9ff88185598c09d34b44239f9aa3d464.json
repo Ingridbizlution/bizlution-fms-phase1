@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT fms.emit_event($1, 'maintenance.meter_threshold_reached',\n                                 'ASSET', $2, $3) AS \"id!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1e01c0c67ac0781fc910236207ed1a8e9ff88185598c09d34b44239f9aa3d464"
+}

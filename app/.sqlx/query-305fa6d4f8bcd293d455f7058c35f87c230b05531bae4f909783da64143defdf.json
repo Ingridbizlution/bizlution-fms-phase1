@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.reservations\n           SET status = 'CHECKED_IN',\n               checked_in_at = clock_timestamp(),\n               check_in_method = $2\n         WHERE id = $1 AND status = 'CONFIRMED'\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "305fa6d4f8bcd293d455f7058c35f87c230b05531bae4f909783da64143defdf"
+}

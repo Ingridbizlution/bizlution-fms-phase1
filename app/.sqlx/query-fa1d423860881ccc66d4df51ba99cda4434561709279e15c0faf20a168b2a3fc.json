@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.id, s.user_id, u.display_name::text AS \"display_name!\",\n                  s.shift_start, s.shift_end, s.shift_type\n             FROM fms.team_shifts s\n             JOIN fms.users u ON u.id = s.user_id\n            WHERE s.team_id = $1\n              -- 重疊而不是包含：一個橫跨查詢區間邊界的班次仍然與那段時間相關。\n              AND s.shift_range && tstzrange($2, $3, '[)')\n            ORDER BY s.shift_start, u.display_name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "shift_start",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "shift_end",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "shift_type",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fa1d423860881ccc66d4df51ba99cda4434561709279e15c0faf20a168b2a3fc"
+}

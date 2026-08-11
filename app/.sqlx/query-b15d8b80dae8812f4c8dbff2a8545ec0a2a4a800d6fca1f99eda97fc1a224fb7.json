@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT m.id,\n               (m.tenant_id IS NULL) AS \"is_platform!\",\n               ac.code::text          AS \"category_code!\",\n               m.manufacturer::text   AS \"manufacturer!\",\n               m.model_no::text       AS \"model_no!\",\n               m.name::text           AS \"name!\",\n               m.specifications       AS \"specifications!\",\n               m.supported_protocols  AS \"supported_protocols!\",\n               m.expected_life_months\n        FROM fms.asset_models m\n        JOIN fms.asset_categories ac ON ac.id = m.category_id\n        WHERE m.is_active\n          AND ($1::text IS NULL OR ac.code = $1)\n          AND ($2::text IS NULL OR m.manufacturer ILIKE '%' || $2 || '%')\n          AND ($3::text = 'all'\n               OR ($3 = 'platform' AND m.tenant_id IS NULL)\n               OR ($3 = 'tenant'   AND m.tenant_id IS NOT NULL))\n          AND ($4::text IS NULL\n               OR (m.manufacturer::text, m.model_no::text, m.id) >\n                  ($4::text, $5::text, $6::uuid))\n        ORDER BY m.manufacturer, m.model_no, m.id\n        LIMIT $7\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_platform!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "category_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "manufacturer!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "model_no!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "specifications!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "supported_protocols!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 8,
+        "name": "expected_life_months",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "b15d8b80dae8812f4c8dbff2a8545ec0a2a4a800d6fca1f99eda97fc1a224fb7"
+}

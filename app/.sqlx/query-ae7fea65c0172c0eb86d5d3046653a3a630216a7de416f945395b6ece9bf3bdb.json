@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.maintenance_plans\n              SET next_due_at = $2,\n                  last_generated_at = clock_timestamp()\n            WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ae7fea65c0172c0eb86d5d3046653a3a630216a7de416f945395b6ece9bf3bdb"
+}

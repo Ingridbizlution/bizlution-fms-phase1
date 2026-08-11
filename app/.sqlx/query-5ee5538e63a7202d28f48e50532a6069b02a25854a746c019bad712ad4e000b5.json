@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH target AS (\n             SELECT w.id,\n                    w.created_by = fms.current_user_id() AS is_owner,\n                    w.status IN ('COMPLETED','CLOSED') AS is_done,\n                    w.satisfaction_score IS NULL AS is_first,\n                    -- 期限從完成時刻起算。`completed_at` 為 NULL 時（狀態是\n                    -- COMPLETED 但 044 清過完成時刻）退回 updated_at ——\n                    -- 那比直接放行安全，也比拒絕合理。\n                    coalesce(w.completed_at, w.updated_at)\n                      > clock_timestamp() - make_interval(days => $3) AS within_window\n               FROM fms.work_orders w\n              WHERE w.id = $1 AND w.deleted_at IS NULL\n           ), updated AS (\n             UPDATE fms.work_orders w\n                SET satisfaction_score = $2, satisfaction_comment = $4\n               FROM target t\n              WHERE w.id = t.id AND t.is_owner AND t.is_done\n                AND (t.is_first OR t.within_window)\n             RETURNING w.id\n           )\n           SELECT t.is_owner, t.is_done, t.is_first, t.within_window,\n                  EXISTS (SELECT 1 FROM updated) AS \"updated!\"\n             FROM target t",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "is_owner",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_done",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "is_first",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "within_window",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "updated!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int2",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "5ee5538e63a7202d28f48e50532a6069b02a25854a746c019bad712ad4e000b5"
+}

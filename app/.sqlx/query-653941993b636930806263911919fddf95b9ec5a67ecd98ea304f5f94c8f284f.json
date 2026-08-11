@@ -1,0 +1,167 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT a.id,\n               a.facility_id,\n               a.spatial_node_id,\n               sn.node_path::text AS \"spatial_node_path\",\n               a.asset_code::text AS \"asset_code!\",\n               a.name::text AS \"name!\",\n               a.serial_no::text AS \"serial_no\",\n               ac.code::text AS \"category_code!\",\n               a.asset_model_id,\n               a.parent_asset_id,\n               a.criticality,\n               a.status,\n               a.install_date,\n               a.warranty_end_date,\n               a.health_score::float8 AS \"health_score\",\n               a.last_telemetry_at,\n               (SELECT count(*) FROM fms.work_orders w\n                 WHERE w.asset_id = a.id\n                   AND w.status NOT IN ('CLOSED','CANCELLED','REJECTED'))\n                 AS \"open_work_order_count!\",\n               (SELECT count(*) FROM fms.alarms al\n                 WHERE al.asset_id = a.id AND al.status = 'ACTIVE')\n                 AS \"active_alarm_count!\",\n               a.specifications AS \"specifications!\",\n               a.attributes AS \"attributes!\",\n               a.version,\n               a.created_at,\n               a.updated_at\n        FROM fms.assets a\n        JOIN fms.asset_categories ac ON ac.id = a.category_id\n        LEFT JOIN fms.spatial_nodes sn ON sn.id = a.spatial_node_id\n        WHERE a.deleted_at IS NULL\n          AND ($1::uuid IS NULL OR a.facility_id = $1)\n          AND ($2::uuid IS NULL OR a.spatial_node_id = $2)\n          AND ($3::uuid IS NULL OR sn.node_path OPERATOR(public.<@)\n                 (SELECT n2.node_path FROM fms.spatial_nodes n2 WHERE n2.id = $3))\n          AND ($4::text IS NULL OR ac.code = $4)\n          AND ($5::text IS NULL OR a.status = $5)\n          AND ($6::text IS NULL OR a.criticality = $6)\n          AND ($7::bool IS NULL OR $7 = EXISTS (\n                SELECT 1 FROM fms.work_orders w\n                 WHERE w.asset_id = a.id\n                   AND w.status NOT IN ('CLOSED','CANCELLED','REJECTED')))\n          AND ($8::text IS NULL\n               OR a.name ILIKE '%' || $8 || '%'\n               OR a.asset_code ILIKE '%' || $8 || '%')\n          AND ($9::uuid IS NULL OR CASE\n                WHEN $12::text = 'created_at' AND $13::bool\n                  THEN (a.created_at, a.id) < ($10::timestamptz, $9::uuid)\n                WHEN $12::text = 'created_at' AND NOT $13::bool\n                  THEN (a.created_at, a.id) > ($10::timestamptz, $9::uuid)\n                WHEN $12::text = 'asset_code' AND $13::bool\n                  THEN (a.asset_code::text, a.id) < ($11::text, $9::uuid)\n                WHEN $12::text = 'asset_code' AND NOT $13::bool\n                  THEN (a.asset_code::text, a.id) > ($11::text, $9::uuid)\n                WHEN $12::text = 'name' AND $13::bool\n                  THEN (a.name::text, a.id) < ($11::text, $9::uuid)\n                WHEN $12::text = 'name' AND NOT $13::bool\n                  THEN (a.name::text, a.id) > ($11::text, $9::uuid)\n              END)\n        ORDER BY\n          (CASE WHEN $12::text = 'created_at' AND $13::bool THEN a.created_at END) DESC,\n          (CASE WHEN $12::text = 'created_at' AND NOT $13::bool THEN a.created_at END) ASC,\n          (CASE WHEN $12::text = 'asset_code' AND $13::bool THEN a.asset_code::text END) DESC,\n          (CASE WHEN $12::text = 'asset_code' AND NOT $13::bool THEN a.asset_code::text END) ASC,\n          (CASE WHEN $12::text = 'name' AND $13::bool THEN a.name::text END) DESC,\n          (CASE WHEN $12::text = 'name' AND NOT $13::bool THEN a.name::text END) ASC,\n          (CASE WHEN $13::bool THEN a.id END) DESC,\n          (CASE WHEN NOT $13::bool THEN a.id END) ASC\n        LIMIT $14\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "spatial_node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "spatial_node_path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "asset_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "serial_no",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "category_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "asset_model_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "parent_asset_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "criticality",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "install_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 13,
+        "name": "warranty_end_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 14,
+        "name": "health_score",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 15,
+        "name": "last_telemetry_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "open_work_order_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 17,
+        "name": "active_alarm_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 18,
+        "name": "specifications!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 19,
+        "name": "attributes!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 20,
+        "name": "version",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 21,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 22,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Text",
+        "Uuid",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      null,
+      true,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "653941993b636930806263911919fddf95b9ec5a67ecd98ea304f5f94c8f284f"
+}

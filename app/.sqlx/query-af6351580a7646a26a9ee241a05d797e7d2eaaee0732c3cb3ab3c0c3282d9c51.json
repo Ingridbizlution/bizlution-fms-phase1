@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT facility_id, chargeable, unit_price::float8 AS \"unit_price\",\n                  currency::text AS currency,\n                  is_attachable_to_reservation, is_standalone_requestable\n             FROM fms.service_items\n            WHERE id = $1 AND deleted_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "chargeable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "unit_price",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "currency",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_attachable_to_reservation",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_standalone_requestable",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      null,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "af6351580a7646a26a9ee241a05d797e7d2eaaee0732c3cb3ab3c0c3282d9c51"
+}

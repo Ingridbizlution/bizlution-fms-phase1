@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT p.id\n        FROM fms.maintenance_plans p\n        JOIN fms.assets a ON a.id = $1 AND a.deleted_at IS NULL\n        LEFT JOIN fms.spatial_nodes sn ON sn.id = a.spatial_node_id\n        WHERE p.is_active\n          AND p.trigger_type IN ('METER', 'HYBRID')\n          AND p.meter_threshold IS NOT NULL\n          AND p.meter_threshold > 0\n          AND lower(p.meter_code) = lower($2)\n          AND ( p.asset_id = a.id\n                OR ( p.spatial_node_id IS NOT NULL\n                     AND sn.node_path OPERATOR(public.<@)\n                           (SELECT n.node_path FROM fms.spatial_nodes n\n                             WHERE n.id = p.spatial_node_id) )\n                OR p.category_id = a.category_id )\n          AND CASE\n                WHEN $3::bool THEN\n                  floor($5::float8::numeric / p.meter_threshold)\n                    > floor(coalesce($4::float8, 0)::numeric / p.meter_threshold)\n                ELSE\n                  coalesce($4::float8, 0)::numeric < p.meter_threshold\n                    AND $5::float8::numeric >= p.meter_threshold\n              END\n        ORDER BY p.code\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Bool",
+        "Float8",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "cbc83118d63304900a55d6423b947298e4378f8005cf38c5220c5eda17160284"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.spatial_nodes SET deleted_at = clock_timestamp(), is_active = false,\n                updated_at = clock_timestamp()\n          WHERE bim_model_id = $1 AND deleted_at IS NULL AND node_type_code != 'BUILDING'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f14ddfe268e7f58177a789e77297745187b18a52acd2bb48d9bf6d0f8c7e56c2"
+}

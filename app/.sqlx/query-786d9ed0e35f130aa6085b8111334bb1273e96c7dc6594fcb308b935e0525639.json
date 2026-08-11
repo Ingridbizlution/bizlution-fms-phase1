@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.reservations\n              SET status = 'COMPLETED',\n                  checked_out_at = clock_timestamp()\n            WHERE id = $1 AND status = 'CHECKED_IN'\n          RETURNING checked_in_at, checked_out_at,\n                    extract(epoch FROM (clock_timestamp() - checked_in_at))::float8 / 60.0\n                      AS \"used_minutes!\",\n                    extract(epoch FROM (end_at - start_at))::float8 / 60.0\n                      AS \"booked_minutes!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "checked_in_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "checked_out_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "used_minutes!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "booked_minutes!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "786d9ed0e35f130aa6085b8111334bb1273e96c7dc6594fcb308b935e0525639"
+}

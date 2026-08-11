@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.id, s.part_id, p.part_code::text AS \"part_code!\",\n                  p.name::text AS \"part_name!\", p.unit::text AS \"unit!\",\n                  s.facility_id, s.storage_node_id,\n                  n.name::text AS storage_node_name,\n                  s.quantity_on_hand::float8 AS \"on_hand!\",\n                  s.quantity_reserved::float8 AS \"reserved!\",\n                  (s.quantity_on_hand - s.quantity_reserved)::float8 AS \"available!\",\n                  s.reorder_point::float8 AS reorder_point,\n                  s.reorder_quantity::float8 AS reorder_quantity,\n                  (s.reorder_point IS NOT NULL\n                   AND s.quantity_on_hand <= s.reorder_point) AS \"needs_reorder!\"\n             FROM fms.part_stock s\n             JOIN fms.parts p ON p.id = s.part_id\n             LEFT JOIN fms.spatial_nodes n ON n.id = s.storage_node_id\n            WHERE ($1::uuid IS NULL OR s.facility_id = $1::uuid)\n              AND ($2::uuid IS NULL OR s.part_id = $2::uuid)\n              AND (NOT $3 OR (s.reorder_point IS NOT NULL\n                              AND s.quantity_on_hand <= s.reorder_point))\n            ORDER BY p.part_code, s.facility_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "part_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "part_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "part_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "unit!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "storage_node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "storage_node_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "on_hand!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 9,
+        "name": "reserved!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 10,
+        "name": "available!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 11,
+        "name": "reorder_point",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 12,
+        "name": "reorder_quantity",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 13,
+        "name": "needs_reorder!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f3ecac1075b1181eb496dd4d8d140f213e877642ce098eb510e0d6267f7c5d88"
+}

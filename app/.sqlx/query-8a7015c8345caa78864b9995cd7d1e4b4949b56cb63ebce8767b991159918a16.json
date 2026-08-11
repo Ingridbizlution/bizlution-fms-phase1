@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.maintenance_plans\n          (tenant_id, facility_id, template_id, code, name,\n           asset_id, spatial_node_id, category_id, trigger_type, rrule,\n           meter_code, meter_threshold, generate_lead_days,\n           completion_grace_days, priority,\n           assigned_team_id, sla_policy_id, next_due_at)\n        VALUES\n          ($1, $2, $3, $4, $5,\n           $6, $7, $8, $9, $10,\n           $11, $12::float8::numeric, coalesce($13::int::smallint, 7),\n           coalesce($14::int::smallint, 0), coalesce($15, 'MEDIUM'),\n           $16, $17, $18)\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Varchar",
+        "Float8",
+        "Int4",
+        "Int4",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8a7015c8345caa78864b9995cd7d1e4b4949b56cb63ebce8767b991159918a16"
+}

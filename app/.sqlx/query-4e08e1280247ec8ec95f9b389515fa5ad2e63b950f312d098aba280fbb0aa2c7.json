@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT (SELECT count(*) FROM fms.organizations c\n                    WHERE c.parent_id = $1 AND c.deleted_at IS NULL) AS \"children!\",\n                  (SELECT count(*) FROM fms.facilities f\n                    WHERE f.org_id = $1 AND f.deleted_at IS NULL) AS \"facilities!\",\n                  (SELECT count(*) FROM fms.users u\n                    WHERE u.primary_org_id = $1) AS \"users!\",\n                  EXISTS (SELECT 1 FROM fms.organizations o\n                           WHERE o.id = $1 AND o.deleted_at IS NULL) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "children!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "facilities!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "users!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "4e08e1280247ec8ec95f9b389515fa5ad2e63b950f312d098aba280fbb0aa2c7"
+}

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH e AS (\n          SELECT r.relation_type,\n                 r.impact_level,\n                 CASE WHEN r.relation_type = 'DEPENDS_ON'\n                      THEN r.to_asset_id ELSE r.from_asset_id END AS supplier_id,\n                 CASE WHEN r.relation_type = 'DEPENDS_ON'\n                      THEN r.from_asset_id ELSE r.to_asset_id END AS dependent_id\n          FROM fms.asset_relations r\n          WHERE r.from_asset_id = $1 OR r.to_asset_id = $1\n        )\n        SELECT e.relation_type AS \"relation_type!\",\n               e.impact_level  AS \"impact_level!\",\n               CASE WHEN e.supplier_id = $1 THEN 'downstream' ELSE 'upstream' END\n                 AS \"direction!\",\n               CASE WHEN e.supplier_id = $1 THEN e.dependent_id ELSE e.supplier_id END\n                 AS \"other_asset_id!\"\n        FROM e\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "relation_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "impact_level!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "direction!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "other_asset_id!",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "b93d4ea54a78fbab46340f3f32791ab0a9713798250cd6aea3fbf6618fbec4b4"
+}

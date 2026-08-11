@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.reservations\n              SET title      = coalesce($3, title),\n                  purpose    = coalesce($4, purpose),\n                  party_size = coalesce($5, party_size),\n                  is_private = coalesce($6, is_private)\n            WHERE recurrence_group_id = $1\n              AND ($2::timestamptz IS NULL OR start_at >= $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "64e74c0bba3652c9d434083110ad127786078736d1fc1992056d440e72f0397a"
+}

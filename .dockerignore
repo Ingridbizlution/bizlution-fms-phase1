@@ -1,0 +1,21 @@
+# build context 是 repo 根目錄（見 app/Dockerfile 檔頭的說明：
+# fms-server 的 include_str! 相對路徑要碰到根目錄的 api/，
+# 所以不能把 context 限制在 app/ 底下）。
+
+# app/target/ 在開發機上可以長到 100GB（見 app/Cargo.toml 對 CI 磁碟耗盡
+# 的註解）。沒有這一行，`docker build` 會把整棵 target/ 送進 build
+# context，輕則建置慢到無法忍受，重則直接把磁碟或 Docker daemon 榨爆。
+app/target/
+.git/
+.claude/
+
+# 這次部署只需要 app/ 與 api/（見 Dockerfile 的 COPY），其餘子樹（docs/、
+# sql/、services/、*.xlsx/*.docx 等）都跟編譯無關，明確排除一次，
+# 避免有人改了 Dockerfile 的 COPY 卻忘了同步排除清單而悄悄變大。
+docs/
+sql/
+services/
+*.xlsx
+*.docx
+*.zip
+_backup_before_fixes/

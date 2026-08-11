@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT facility_id FROM fms.reservations\n            WHERE recurrence_group_id = $1\n              AND ($2::timestamptz IS NULL OR start_at >= $2)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "053aa130826039741ec2b6ad4417ae224815dd9ea3849c462d095411baa32b0c"
+}

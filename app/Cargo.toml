@@ -1,0 +1,149 @@
+[workspace]
+resolver = "2"
+members = ["crates/fms-shared", "crates/fms-identity", "crates/fms-reservation", "crates/fms-asset", "crates/fms-workorder", "crates/fms-maintenance", "crates/fms-attachment", "crates/fms-tenancy", "crates/fms-catalogue", "crates/fms-report", "crates/fms-notification", "crates/fms-calendar", "crates/fms-worker", "crates/fms-jobs", "crates/fms-server", "crates/fms-loadtest"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+publish = false
+
+[workspace.dependencies]
+fms-shared = { path = "crates/fms-shared" }
+fms-identity = { path = "crates/fms-identity" }
+fms-reservation = { path = "crates/fms-reservation" }
+fms-asset = { path = "crates/fms-asset" }
+fms-workorder = { path = "crates/fms-workorder" }
+fms-maintenance = { path = "crates/fms-maintenance" }
+fms-attachment = { path = "crates/fms-attachment" }
+fms-tenancy = { path = "crates/fms-tenancy" }
+fms-catalogue = { path = "crates/fms-catalogue" }
+fms-report = { path = "crates/fms-report" }
+fms-notification = { path = "crates/fms-notification" }
+fms-calendar = { path = "crates/fms-calendar" }
+fms-worker = { path = "crates/fms-worker" }
+fms-jobs = { path = "crates/fms-jobs" }
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+axum = { version = "0.8", features = ["macros", "multipart"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.6", features = ["trace", "request-id", "util", "cors"] }
+sqlx = { version = "0.8", default-features = false, features = [
+  "runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "json", "macros",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "2"
+anyhow = "1"
+# 需要 dyn CalendarProvider（同一個呼叫端要能拿 Microsoft 或 Google 的實作）——
+# 原生 async fn in trait 到 2021 edition 為止還不 dyn-compatible。
+async-trait = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+# OpenTelemetry。**http-proto 而不是 grpc-tonic**：前者走 reqwest，重用工作區
+# 已有的 HTTP/TLS 依賴樹；後者會多拉一整套 tonic + prost + hyper-grpc。
+# CI 的 app job 才剛因為磁碟耗盡失敗過（見 .github/workflows 與 [profile.dev]），
+# 所以「換一個 feature 就少一棵樹」在這裡是有價值的。
+#
+# `rt-tokio` 讓 span 以批次背景匯出，而不是每一個 span 都同步送出去。
+opentelemetry = "0.32"
+opentelemetry_sdk = { version = "0.32", features = ["rt-tokio"] }
+# `reqwest-blocking-client` 而不是 `reqwest-client`。**這不是風格選擇。**
+#
+# `with_batch_exporter` 的批次處理器跑在自己的專屬執行緒（thread 名字就叫
+# `OpenTelemetry.Traces.BatchProcessor`），而那個執行緒**沒有 tokio reactor**。
+# 配非同步的 reqwest client 會在該執行緒上 panic：
+#
+#   there is no reactor running, must be called from the context of a Tokio 1.x runtime
+#
+# 而且 panic 發生在**背景執行緒**，主流程完全看不到 —— 症狀是每一個 span 都
+# 遺失。這是 opentelemetry-otlp 預設 features 就選 blocking client 的原因。
+#
+# 抓到它的是 TelemetryGuard 把 flush 與 shutdown 分開回報那一段：
+# flush 失敗代表「真的丟資料」，而合在一起看時它被 shutdown 的抱怨蓋掉了。
+opentelemetry-otlp = { version = "0.32", default-features = false, features = [
+  "trace", "http-proto", "reqwest-blocking-client",
+] }
+# **這一行是必要的，不是可選的。** `reqwest-client` 編出來的 reqwest 帶
+# `rustls-no-provider`，於是建立 Client 時會 **panic**：
+#   "No rustls crypto provider is configured"
+# 實測踩到了。而 panic 不是 Err，所以 init_telemetry 那段「匯出器建不起來也
+# 不讓服務起不來」完全接不到 —— 症狀是**第一個設 OTEL_EXPORTER_OTLP_ENDPOINT
+# 的人發現伺服器開不起來**，而 CI 抓不到，因為 CI 不設那個變數。
+#
+# 試過改用 `reqwest-rustls-webpki-roots`：不行 —— opentelemetry-http 0.32 要的
+# reqwest feature 名稱（`webpki-roots`）在 reqwest 0.13 已經改掉，解不了版本。
+# 因此照 panic 訊息自己建議的做法，在 init_telemetry 裡裝 provider。
+rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs"] }
+
+# 往「租戶填的網址」發請求（目前只有 test-connection，webhooks 會是第二個）。
+# `rustls-tls` 而非 native-tls：與 sqlx／lettre／aws-sdk-s3 一致，
+# 否則同一個二進位會連進兩套 TLS 實作。
+# 沒有 `charset`／`cookies`／`gzip` —— 我們只讀 JSON，而 cookie jar 在一個
+# 對外部主機發請求的路徑上是額外的狀態面。
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+tracing-opentelemetry = "0.33"
+jsonwebtoken = "9"
+argon2 = "0.5"
+secrecy = { version = "0.10", features = ["serde"] }
+config = "0.15"
+dotenvy = "0.15"
+validator = { version = "0.19", features = ["derive"] }
+base64 = "0.22"
+jsonschema = "0.49"
+# xlsx 產出。契約（ENDPOINTS.md）寫的是「匯出 xlsx/csv」，只做 csv 是把
+# 契約悄悄縮小。與 RRULE／SMTP 同一個判斷：xlsx 是規格（OOXML／zip）
+# 不是領域規則。純 Rust，沒有 C 依賴（刻意不開 `zlib` feature ——
+# 那會拉進 libz-sys）。
+rust_xlsxwriter = "0.97"
+# RFC 5545 展開。刻意不自己實作：RRULE 是規格不是領域規則，
+# 月底夾值、DST、BYDAY 的組合是 bug 的經典來源。
+rrule = "0.13"
+chrono-tz = "0.10"
+# 標準 5 欄 crontab 語法（identity_providers.sync_cron）。與 RRULE 同一個判斷：
+# 排程語法是規格不是領域規則，自己寫解析器等於再造一份規格。
+saffron = "0.1"
+# SMTP。與 RRULE／SigV4 同一個判斷：SMTP 是規格不是領域規則，
+# 自己實作 AUTH、STARTTLS 與 MIME 編碼等於再實作一次規格。
+# `rustls` 而非 `native-tls`：與 sqlx 的 `tls-rustls` 一致，
+# 不為了同一件事帶進第二套 TLS 實作。
+lettre = { version = "0.11", default-features = false, features = [
+  "builder", "hostname", "smtp-transport", "tokio1", "tokio1-rustls-tls",
+] }
+# S3／MinIO。規格書列的技術棧就是 aws-sdk-s3；預簽網址是 SigV4，
+# 自己算等於再實作一次規格（與 RRULE 同一個判斷）。
+# `rustls` 不是可選的：關掉 default features 就沒有 HTTP 連線器，
+# SDK 會在送出請求時失敗，而錯誤訊息完全看不出是缺 feature。
+aws-sdk-s3 = { version = "1", default-features = false, features = ["rt-tokio", "rustls"] }
+aws-credential-types = "1"
+sha2 = "0.10"
+# webhook 的 HMAC-SHA256 簽章。接收端靠它確認請求真的來自我們。
+hmac = "0.12"
+
+# =============================================================================
+# 建置設定
+# =============================================================================
+# CI 的 app job 曾兩次因為**磁碟耗盡**失敗（`No space left on device`，
+# 第一次的症狀是 `ld terminated with signal 7 [Bus error]` —— 磁碟滿導致
+# mmap 失敗）。實測本地 `app/target/debug` 是 **57 GB**，而 GitHub runner
+# 只有約 14 GB 可用。
+#
+# 組成：`incremental` 21 GB、`deps` 36 GB、`build` 157 MB。
+#
+# 這裡處理 `deps` 那 36 GB —— 其中主體是 debug info。28 個整合測試 binary
+# 每個都靜態連結 aws-lc-sys／ring／rustls／aws-sdk-s3／jsonschema 那一整串。
+#
+# `line-tables-only` 保留 panic backtrace 的 `file:line`（測試失敗時真正需要
+# 的東西），只拿掉變數與型別資訊 —— 那是給 debugger 用的，而這些整合測試
+# 沒有人用 debugger 跑。
+#
+# **設在 `dev` 而不是 `test`**：`cargo test` 只有測試 target 本身用 `test`
+# profile，**依賴是用 `dev` 建的**。設在 `test` 只會縮到 28 個 binary 的
+# 最外層，那 36 GB 的絕大部分不會動。`test` 繼承 `dev`，所以這一行同時涵蓋兩者。
+#
+# `incremental` 那 21 GB 在 CI 用 `CARGO_INCREMENTAL=0` 處理（見 workflow）——
+# 每個 CI job 都是全新的，增量產物沒有任何東西可以重用。本地刻意保留增量編譯。
+[profile.dev]
+debug = "line-tables-only"

@@ -1,0 +1,21 @@
+[package]
+name = "fms-worker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fms-shared.workspace = true
+sqlx.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "signal", "time", "sync"] }
+serde_json.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+anyhow.workspace = true
+lettre.workspace = true
+chrono.workspace = true
+rust_xlsxwriter.workspace = true
+sha2.workspace = true
+hmac.workspace = true
+reqwest.workspace = true

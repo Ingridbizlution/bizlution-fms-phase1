@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.facilities\n          (id, tenant_id, org_id, code, name, facility_type, address_line1, city,\n           country_code, timezone, gross_area_sqm, operating_hours, attributes)\n        VALUES ($13, $1, $2, $3, $4, coalesce($5, 'OFFICE'), $6, $7,\n                coalesce($8, 'TW'), coalesce($9, 'Asia/Taipei'),\n                $10::float8::numeric, coalesce($11, '{}'::jsonb),\n                coalesce($12, '{}'::jsonb))\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Text",
+        "Varchar",
+        "Text",
+        "Text",
+        "Float8",
+        "Jsonb",
+        "Jsonb",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2818589a00c7688b28b0489f333cfdf08bd57b0960c4abff2846a3f69eb1e013"
+}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facility Management System API 參考文件</title>
+<link rel="stylesheet" href="vendor/tabler/tabler.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar navbar-expand-md navbar-light d-print-none reference-topbar">
+  <div class="container-xl">
+    <a href="#/getting-started" class="navbar-brand">
+      Facility Management System API 參考文件
+      <span id="version-info" class="reference-version-badge"></span>
+    </a>
+    <div class="ms-auto text-secondary small">
+      可直接在頁面發送測試請求（先在左側「測試設定」填 Base URL）
+    </div>
+  </div>
+</header>
+
+<div class="reference-layout">
+  <aside class="reference-sidebar">
+    <div class="reference-sidebar-search">
+      <input
+        id="search-input"
+        type="search"
+        class="form-control"
+        placeholder="搜尋 API（path／summary）…"
+        autocomplete="off"
+      >
+    </div>
+
+    <details class="reference-tryit-settings">
+      <summary>測試設定</summary>
+      <div class="reference-tryit-settings-body">
+        <label class="form-label">Base URL</label>
+        <input id="settings-base-url" class="form-control form-control-sm" placeholder="http://localhost:8000">
+        <label class="form-label mt-2">Bearer Token</label>
+        <input id="settings-token" type="password" class="form-control form-control-sm" placeholder="access_token">
+        <label class="form-label mt-2">X-Tenant-ID</label>
+        <input id="settings-tenant-id" class="form-control form-control-sm" placeholder="租戶 UUID">
+        <p class="reference-tryit-settings-note">
+          只存在你瀏覽器的 localStorage，只會送到你填的 Base URL，不會送到
+          任何其他地方。
+        </p>
+      </div>
+    </details>
+
+    <nav id="sidebar-groups" class="reference-sidebar-groups">
+      <!-- app.js 依 openapi.json 的 tags 動態產生 -->
+    </nav>
+  </aside>
+
+  <main id="main-content" class="reference-main">
+    <!-- app.js 依目前的 hash 動態產生 Getting Started 或單一 operation 的內容 -->
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

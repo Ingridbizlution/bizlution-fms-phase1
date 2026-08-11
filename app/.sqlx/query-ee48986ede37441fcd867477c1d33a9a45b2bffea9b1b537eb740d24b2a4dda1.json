@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.part_stock\n           SET quantity_on_hand = quantity_on_hand - $3::float8::numeric,\n               updated_at = clock_timestamp()\n         WHERE part_id = $1 AND facility_id = $2\n           AND quantity_on_hand >= $3::float8::numeric\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ee48986ede37441fcd867477c1d33a9a45b2bffea9b1b537eb740d24b2a4dda1"
+}

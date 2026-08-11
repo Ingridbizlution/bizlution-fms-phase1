@@ -1,0 +1,324 @@
+# =============================================================================
+# Facility Management System — 本機／開發環境（Docker Compose）
+# =============================================================================
+# 用途：取代託管 PostgreSQL，讓開發、CI 與 UAT 前的驗證都能在本機重現。
+#
+# 快速開始
+#   cp .env.example .env        # 依需要調整密碼與埠號
+#   make up                     # 啟動基礎服務
+#   make migrate                # 套用 sql/001–013
+#   make seed                   # 套用示範租戶（009）
+#   make test                   # 執行煙霧測試（010、012）
+#   make psql                   # 以 fms_owner 進入資料庫
+#
+# 設計要點
+#   * 三個資料庫角色刻意分離：
+#       fms_owner     擁有 schema 與物件，執行 migration，屬 fms_platform
+#       fms_app       API 連線用；非 owner、非 fms_platform → RLS 完整生效
+#       fms_readonly  報表與稽核唯讀
+#     絕不使用 postgres 超級使用者跑應用，否則 BYPASSRLS 會讓多租戶隔離失效。
+#   * PostgreSQL 版本固定為 16，與規格書一致；ltree／btree_gist／pgcrypto／
+#     pg_trgm／citext 皆為 trusted extension，fms_owner 即可安裝。
+#   * 資料以具名 volume 保存；make reset 會整卷刪除以重建乾淨環境。
+# =============================================================================
+
+name: bizlution-fms
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — 主資料庫
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: fms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-fms}
+      # 台灣時區與 UTF-8 排序，避免與正式環境行為不一致
+      TZ: ${TZ:-Asia/Taipei}
+      PGTZ: ${TZ:-Asia/Taipei}
+      LANG: C.UTF-8
+      FMS_OWNER_PASSWORD: ${FMS_OWNER_PASSWORD:-fms_owner_dev}
+      FMS_APP_PASSWORD: ${FMS_APP_PASSWORD:-fms_app_dev}
+      FMS_READONLY_PASSWORD: ${FMS_READONLY_PASSWORD:-fms_readonly_dev}
+      # 備份專用角色（BYPASSRLS、唯讀）。見 initdb/02-backup-role.sh
+      FMS_BACKUP_PASSWORD: ${FMS_BACKUP_PASSWORD:-fms_backup_dev}
+    command:
+      - postgres
+      # 開發用調校：放大共用緩衝並開啟慢查詢與 autoexplain 以便早期發現索引問題
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=256MB
+      - -c
+      - max_connections=200
+      - -c
+      - log_min_duration_statement=300
+      - -c
+      - log_lock_waits=on
+      - -c
+      - log_line_prefix=%m [%p] %u@%d
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+      - -c
+      - timezone=Asia/Taipei
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 初始化只在資料卷為空時執行一次：建立角色與擴充
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+      # 讓容器內可直接以 psql 套用 migration
+      - ../sql:/sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER:-postgres} -d ${POSTGRES_DB:-fms}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # Redis — 權限判定快取與租戶限流計數（非正確性依賴）
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: fms-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # MinIO — S3 相容儲存體（附件、BIM 模型、報表匯出）
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: fms-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-fmsminio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-fmsminio_dev}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # 一次性作業：建立 bucket 並設為私有（附件一律走預簽網址）
+  minio-init:
+    image: minio/mc:latest
+    container_name: fms-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-fmsminio} ${MINIO_ROOT_PASSWORD:-fmsminio_dev} &&
+      mc mb --ignore-existing local/fms &&
+      mc mb --ignore-existing local/fms-bim &&
+      mc mb --ignore-existing local/fms-exports &&
+      mc anonymous set none local/fms &&
+      mc anonymous set none local/fms-bim &&
+      mc anonymous set none local/fms-exports &&
+      echo 'MinIO buckets ready: fms, fms-bim, fms-exports'
+      "
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
+  # Mailpit — 攔截開發環境所有外寄信件（通知範本驗證用）
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: fms-mailpit
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"   # SMTP
+      - "${MAILPIT_UI_PORT:-8025}:8025"     # Web UI
+
+  # ---------------------------------------------------------------------------
+  # OpenTelemetry Collector — trace 匯出的接收端
+  # ---------------------------------------------------------------------------
+  # 不在 `make up` 的預設清單裡（profile: otel）：沒設
+  # OTEL_EXPORTER_OTLP_ENDPOINT 的話應用端根本不會匯出，跑一個沒人送資料的
+  # collector 只是浪費。要用時 `make otel`。
+  otel-collector:
+    # **core 而不是 contrib**：這份設定只用 otlp receiver + batch processor
+    # + debug exporter，三個都在 core 發行版裡。contrib 486 MB，core 216 MB
+    # —— 而 CI 每次都要拉它。實測過 core 跑得起來且 smoke 四格全過。
+    image: otel/opentelemetry-collector:latest
+    container_name: fms-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel/collector.yaml"]
+    volumes:
+      - ./otel/collector.yaml:/etc/otel/collector.yaml:ro
+    ports:
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+    profiles: ["otel"]
+
+  # ---------------------------------------------------------------------------
+  # Adminer — 輕量資料庫瀏覽（僅開發用，勿部署到任何對外環境）
+  # ---------------------------------------------------------------------------
+  adminer:
+    image: adminer:latest
+    container_name: fms-adminer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    profiles: ["tools"]
+
+  # ---------------------------------------------------------------------------
+  # MQTT Broker — IoT 遙測與下行命令（第四階段 Rust broker 的本機替身）
+  # ---------------------------------------------------------------------------
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: fms-mosquitto
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_WS_PORT:-9002}:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqttdata:/mosquitto/data
+    profiles: ["iot"]
+
+  # ---------------------------------------------------------------------------
+  # migrate / test — 一次性作業容器，避免依賴開發者本機是否安裝 psql
+  # ---------------------------------------------------------------------------
+  migrate:
+    image: postgres:16-alpine
+    container_name: fms-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${FMS_OWNER_PASSWORD:-fms_owner_dev}
+      # make-test-template.sh 需要超級使用者來 CREATE DATABASE 與授予 CREATEDB。
+      # migrate.sh 本身不用它。
+      POSTGRES_SUPERUSER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_SUPERUSER_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
+    volumes:
+      - ../sql:/sql:ro
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/migrate.sh"]
+    profiles: ["jobs"]
+
+  smoke-test:
+    image: postgres:16-alpine
+    container_name: fms-smoke-test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${FMS_OWNER_PASSWORD:-fms_owner_dev}
+    volumes:
+      - ../sql:/sql:ro
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/smoke-test.sh"]
+    profiles: ["jobs"]
+
+  # 併發搶訂：以 fms_app 開 N 條連線，因此同時需要 owner 密碼做前置與清理
+  concurrency-test:
+    image: postgres:16-alpine
+    container_name: fms-concurrency-test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FMS_OWNER_PASSWORD: ${FMS_OWNER_PASSWORD:-fms_owner_dev}
+      FMS_APP_PASSWORD: ${FMS_APP_PASSWORD:-fms_app_dev}
+      CLIENTS: ${CONCURRENCY_CLIENTS:-100}
+    volumes:
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/concurrency-test.sh"]
+    profiles: ["jobs"]
+
+  # 以 fms_app（而非 fms_owner）驗證租戶隔離；密碼因此取 FMS_APP_PASSWORD
+  check-isolation:
+    image: postgres:16-alpine
+    container_name: fms-check-isolation
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${FMS_APP_PASSWORD:-fms_app_dev}
+    volumes:
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/check-isolation.sh"]
+    profiles: ["jobs"]
+
+  # 備份／還原演練。需要超級使用者（建拋棄式資料庫）與 fms_owner（pg_dump）
+  # 兩組憑證，因此密碼不用 PGPASSWORD 而是各自傳入。
+  backup-restore-drill:
+    image: postgres:16-alpine
+    container_name: fms-backup-restore-drill
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_SUPERUSER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_SUPERUSER_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-fms}
+      FMS_OWNER_PASSWORD: ${FMS_OWNER_PASSWORD:-fms_owner_dev}
+      FMS_BACKUP_PASSWORD: ${FMS_BACKUP_PASSWORD:-fms_backup_dev}
+    volumes:
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/backup-restore-drill.sh"]
+    profiles: ["jobs"]
+
+  # 稽核寫入放大的 A/B 量測。只量測與記錄，不判定成敗（見腳本檔頭）。
+  audit-overhead-bench:
+    image: postgres:16-alpine
+    container_name: fms-audit-overhead-bench
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_SUPERUSER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_SUPERUSER_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
+      FMS_OWNER_PASSWORD: ${FMS_OWNER_PASSWORD:-fms_owner_dev}
+    volumes:
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/audit-overhead-bench.sh"]
+    profiles: ["jobs"]
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  mqttdata:

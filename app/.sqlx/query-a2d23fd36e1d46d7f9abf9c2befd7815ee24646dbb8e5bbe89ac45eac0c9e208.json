@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.work_orders w SET\n          parts_cost = coalesce((SELECT sum(wp.total_cost)\n                                   FROM fms.work_order_parts wp\n                                  WHERE wp.work_order_id = w.id), 0),\n          labor_cost = coalesce((SELECT sum(l.cost)\n                                   FROM fms.work_order_labor l\n                                  WHERE l.work_order_id = w.id), 0),\n          labor_minutes = coalesce((SELECT sum(l.minutes)::int\n                                      FROM fms.work_order_labor l\n                                     WHERE l.work_order_id = w.id), w.labor_minutes)\n        WHERE w.id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a2d23fd36e1d46d7f9abf9c2befd7815ee24646dbb8e5bbe89ac45eac0c9e208"
+}

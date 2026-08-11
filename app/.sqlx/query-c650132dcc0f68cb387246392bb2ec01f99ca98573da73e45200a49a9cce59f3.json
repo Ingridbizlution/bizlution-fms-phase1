@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT u.password_hash,\n               u.status::text AS \"status!\",\n               fms.tenant_setting_int('password_min_length', 12) AS \"min_length!\"\n          FROM fms.users u\n         WHERE u.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "password_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "status!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "min_length!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "c650132dcc0f68cb387246392bb2ec01f99ca98573da73e45200a49a9cce59f3"
+}

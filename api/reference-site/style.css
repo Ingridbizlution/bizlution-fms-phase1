@@ -1,0 +1,258 @@
+/*
+疊在 vendor/tabler/tabler.min.css 上的少量覆寫。
+
+刻意不修改 vendor/ 下的檔案本身（見 vendor/tabler/README.md）——所有客製都
+集中在這裡，升級 Tabler 版本時不需要重新比對「哪裡被改過」。
+*/
+
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.reference-topbar {
+  flex-shrink: 0;
+}
+
+.reference-version-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--tblr-secondary);
+  background: var(--tblr-bg-surface-secondary);
+  border-radius: var(--tblr-border-radius);
+  vertical-align: middle;
+}
+
+.reference-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 固定寬度側欄，desktop-first：這是給前端工程師在螢幕前查資料用的參考站，
+   不是行動裝置優先的產品介面，因此不做 Tabler 慣用的 navbar-collapse／
+   漢堡選單 JS 行為（那需要額外 vendor Bootstrap 的 collapse JS）。窄螢幕
+   下側欄改成佔滿寬度、疊在內容上方，純 CSS 就能達成。 */
+.reference-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--tblr-border-color);
+  background: var(--tblr-bg-surface);
+}
+
+.reference-sidebar-search {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--tblr-border-color);
+  position: sticky;
+  top: 0;
+  background: var(--tblr-bg-surface);
+  z-index: 1;
+}
+
+.reference-tryit-settings {
+  border-bottom: 1px solid var(--tblr-border-color);
+  padding: 0.5rem 0.75rem;
+}
+
+.reference-tryit-settings summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tblr-secondary);
+  padding: 0.25rem 0;
+}
+
+.reference-tryit-settings-body {
+  padding-top: 0.5rem;
+}
+
+.reference-tryit-settings-body .form-label {
+  font-size: 0.75rem;
+  margin-bottom: 0.15rem;
+}
+
+.reference-tryit-settings-note {
+  font-size: 0.7rem;
+  color: var(--tblr-secondary);
+  margin: 0.5rem 0 0;
+}
+
+.reference-sidebar-groups {
+  padding: 0.5rem 0 1.5rem;
+}
+
+.reference-sidebar-group + .reference-sidebar-group {
+  margin-top: 0.5rem;
+}
+
+.reference-sidebar-group-title {
+  padding: 0.5rem 1rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tblr-secondary);
+}
+
+.reference-nav-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 1rem;
+  font-size: 0.825rem;
+  color: var(--tblr-body-color);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+}
+
+.reference-nav-link:hover {
+  background: var(--tblr-bg-surface-secondary);
+}
+
+.reference-nav-link.active {
+  background: var(--tblr-bg-surface-secondary);
+  border-left-color: var(--tblr-primary);
+  font-weight: 600;
+}
+
+.reference-nav-link .reference-method-badge {
+  flex-shrink: 0;
+  width: 3.4rem;
+  text-align: center;
+  font-size: 0.6875rem;
+}
+
+.reference-nav-link .reference-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.reference-nav-link.reference-hidden,
+.reference-sidebar-group.reference-hidden {
+  display: none;
+}
+
+.reference-main {
+  flex: 1;
+  min-width: 0;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.reference-main > .container-xl {
+  max-width: 960px;
+}
+
+/* method badge 色票：跟 sidebar／operation 標頭共用同一組對應規則
+   （見 app.js 的 METHOD_BADGE_CLASS）。 */
+.reference-method-get { background: var(--tblr-blue-lt); color: var(--tblr-blue); }
+.reference-method-post { background: var(--tblr-green-lt); color: var(--tblr-green); }
+.reference-method-put { background: var(--tblr-azure-lt); color: var(--tblr-azure); }
+.reference-method-patch { background: var(--tblr-orange-lt); color: var(--tblr-orange); }
+.reference-method-delete { background: var(--tblr-red-lt); color: var(--tblr-red); }
+
+.reference-op-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.reference-op-header code {
+  font-size: 1rem;
+}
+
+.reference-op-summary {
+  color: var(--tblr-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.reference-section-title {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.reference-getting-started img {
+  max-width: 100%;
+}
+
+.reference-getting-started pre,
+.reference-example pre {
+  background: var(--tblr-dark);
+  color: #e6e6e6;
+  padding: 0.75rem 1rem;
+  border-radius: var(--tblr-border-radius);
+  overflow-x: auto;
+  font-size: 0.825rem;
+}
+
+.reference-getting-started table {
+  width: 100%;
+}
+
+.reference-tryit {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--tblr-border-color);
+  border-radius: var(--tblr-border-radius);
+  background: var(--tblr-bg-surface);
+}
+
+.reference-tryit-group-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tblr-secondary);
+  margin: 0.75rem 0 0.35rem;
+}
+
+.reference-tryit-group-label:first-child {
+  margin-top: 0;
+}
+
+.reference-tryit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.reference-tryit-row .reference-tryit-param-name {
+  flex-shrink: 0;
+  width: 9rem;
+  font-size: 0.8rem;
+}
+
+.reference-tryit-row input {
+  flex: 1;
+}
+
+.reference-tryit textarea.reference-tryit-body {
+  width: 100%;
+  min-height: 8rem;
+  font-family: var(--tblr-font-monospace);
+  font-size: 0.8rem;
+}
+
+.reference-tryit-response {
+  margin-top: 1rem;
+}
+
+.reference-tryit-response pre {
+  background: var(--tblr-dark);
+  color: #e6e6e6;
+  padding: 0.75rem 1rem;
+  border-radius: var(--tblr-border-radius);
+  overflow-x: auto;
+  font-size: 0.8rem;
+  max-height: 24rem;
+}
+
+.reference-tryit-status-ok { color: var(--tblr-green); font-weight: 600; }
+.reference-tryit-status-err { color: var(--tblr-red); font-weight: 600; }

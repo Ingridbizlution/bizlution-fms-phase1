@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.work_order_labor\n          (tenant_id, work_order_id, user_id, started_at, ended_at, minutes)\n        SELECT $1, $2, $3,\n               coalesce(w.actual_start_at, clock_timestamp())\n                 - ($4::int * interval '1 minute'),\n               coalesce(w.actual_start_at, clock_timestamp()),\n               $4\n        FROM fms.work_orders w\n        WHERE w.id = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aa9559372962b9e061f2ff8573c324ab8a956ffad3dbc522a1479cb05617b24b"
+}

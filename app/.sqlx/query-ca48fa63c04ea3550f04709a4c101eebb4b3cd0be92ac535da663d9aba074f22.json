@@ -1,0 +1,187 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.service_items SET\n             category                     = coalesce($2, category),\n             name                         = coalesce($3, name),\n             lead_time_minutes            = coalesce($4, lead_time_minutes),\n             default_duration_minutes     = coalesce($5, default_duration_minutes),\n             relative_offset_minutes      = coalesce($6, relative_offset_minutes),\n             is_attachable_to_reservation = coalesce($7, is_attachable_to_reservation),\n             is_standalone_requestable    = coalesce($8, is_standalone_requestable),\n             requires_approval            = coalesce($9, requires_approval),\n             chargeable                   = coalesce($10, chargeable),\n             form_schema                  = coalesce($11, form_schema),\n             availability                 = coalesce($12, availability),\n             display_order                = coalesce($13, display_order),\n             is_active                    = coalesce($14, is_active),\n             description        = CASE WHEN $15 THEN $16 ELSE description END,\n             approver_role_code = CASE WHEN $17 THEN $18 ELSE approver_role_code END,\n             unit_price         = CASE WHEN $19 THEN $20::float8::numeric ELSE unit_price END,\n             currency           = CASE WHEN $21 THEN $22 ELSE currency END,\n             unit_label         = CASE WHEN $23 THEN $24 ELSE unit_label END,\n             max_quantity       = CASE WHEN $25 THEN $26 ELSE max_quantity END,\n             icon               = CASE WHEN $27 THEN $28 ELSE icon END,\n             updated_at = clock_timestamp()\n           WHERE id = $1 AND deleted_at IS NULL\n           RETURNING id, facility_id, category, code::text AS \"code!\",\n                     name::text AS \"name!\", description,\n                     lead_time_minutes, default_duration_minutes,\n                     relative_offset_minutes, is_attachable_to_reservation,\n                     is_standalone_requestable, requires_approval,\n                     approver_role_code::text AS approver_role_code,\n                     chargeable, unit_price::float8 AS \"unit_price\",\n                     currency::text AS currency,\n                     unit_label::text AS unit_label, max_quantity,\n                     form_schema, availability, icon::text AS icon,\n                     display_order, is_active, deleted_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "category",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "lead_time_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "default_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "relative_offset_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "is_attachable_to_reservation",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "is_standalone_requestable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "requires_approval",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "approver_role_code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "chargeable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "unit_price",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 15,
+        "name": "currency",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "unit_label",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "max_quantity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 18,
+        "name": "form_schema",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 19,
+        "name": "availability",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 20,
+        "name": "icon",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "display_order",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 22,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 23,
+        "name": "deleted_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Varchar",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Jsonb",
+        "Jsonb",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Float8",
+        "Bool",
+        "Bpchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      null,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      null,
+      null,
+      null,
+      true,
+      false,
+      false,
+      null,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "ca48fa63c04ea3550f04709a4c101eebb4b3cd0be92ac535da663d9aba074f22"
+}

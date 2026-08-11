@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.reservations\n          (tenant_id, facility_id, bookable_resource_id, reservation_no,\n           resource_type, resource_id, organizer_id, title, purpose, party_size,\n           start_at, end_at, status, approval_required, requires_check_in, created_via,\n           -- 已消耗的佔位留在這一列上：事後要回答「這筆預約是不是走兩階段來的」\n           -- 只能靠它（reservation_holds 的列會隨保留期限被清掉）。\n           hold_token,\n           recurrence_group_id, recurrence_rule,\n           auto_release_at, is_private)\n        VALUES\n          ($1, $2, $3, fms.next_document_no($1, 'RESERVATION', 'RSV'),\n           $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'API', $16, $17, $18,\n           -- no-show 的判定時點。只在「需要報到」且資源設了釋放分鐘數時才有值。\n           -- 先前這一欄從未被填入，等於 no-show 機制整條是斷的：\n           -- 背景作業沒有東西可掃，`NO_SHOW` 狀態永遠用不到。\n           CASE WHEN $14 AND $15::int IS NOT NULL\n                -- $10 是 start_at（$11 是 end_at）：釋放時點從**開始時間**起算，\n                -- 「開始後 15 分鐘還沒到就算 no-show」。用 end_at 起算會變成\n                -- 會議結束後才判定，那時釋放時段已經沒有意義。\n                THEN $10::timestamptz + ($15::int * interval '1 minute') END,\n           -- 011 的私人旗標。未帶等於 false —— `coalesce` 而不是讓 NOT NULL\n           -- 擋下請求：契約把它標成選用，而預設不私人是正確的預設。\n           coalesce($19, false))\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Varchar",
+        "Uuid",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "fd2c9f1d8e520a57b3491b1f1f919bfe0b5ab14ce7bc8c227c3b9d7d4e5e10a8"
+}

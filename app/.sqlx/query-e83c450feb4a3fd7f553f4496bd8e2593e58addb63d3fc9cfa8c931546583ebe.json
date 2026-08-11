@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.event_outbox\n                     SET status = 'PUBLISHED', published_at = clock_timestamp(), last_error = NULL\n                     WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e83c450feb4a3fd7f553f4496bd8e2593e58addb63d3fc9cfa8c931546583ebe"
+}

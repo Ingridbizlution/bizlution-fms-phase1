@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.user_id, u.display_name::text AS \"display_name!\",\n                  m.role_in_team,\n                  count(w.id) FILTER (WHERE st.is_terminal IS NOT TRUE) AS \"open!\",\n                  count(w.id) FILTER (WHERE st.is_terminal IS NOT TRUE\n                                        AND w.sla_state = 'BREACHED') AS \"breached!\",\n                  count(w.id) FILTER (WHERE st.is_terminal IS NOT TRUE\n                                        AND w.resolution_due_at < clock_timestamp())\n                    AS \"overdue!\",\n                  count(w.id) FILTER (WHERE st.is_terminal IS NOT TRUE\n                                        AND w.priority IN ('URGENT','CRITICAL'))\n                    AS \"urgent!\"\n             FROM fms.team_members m\n             JOIN fms.users u ON u.id = m.user_id\n             LEFT JOIN fms.work_orders w\n                    ON w.assignee_id = m.user_id AND w.deleted_at IS NULL\n             LEFT JOIN fms.work_order_statuses st ON st.code = w.status\n            WHERE m.team_id = $1\n            GROUP BY m.user_id, u.display_name, m.role_in_team\n            ORDER BY 4 DESC, u.display_name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "role_in_team",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "open!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "breached!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "overdue!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "urgent!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1c6abbeab82b65de6edfdb66238ede2c6cbf6d3f6c232ab2c444e0d4a13dfa64"
+}

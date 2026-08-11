@@ -1,0 +1,29 @@
+[package]
+name = "fms-jobs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# 背景作業的組裝根（composition root）。
+#
+# 刻意獨立成一個 crate 而不是放在 `fms-worker` 裡：`fms-worker` 是**機制**
+# （outbox claim、退避、停放），`fms-maintenance` 是**政策**，而政策需要
+# 機制的 trait。若把執行檔放在 fms-worker 內，就會出現
+# fms-worker → fms-maintenance → fms-worker 的套件循環，Cargo 直接拒絕。
+#
+# 那個循環是有意義的訊號：組裝根不該住在機制函式庫裡面。
+[dependencies]
+fms-shared = { path = "../fms-shared" }
+fms-worker.workspace = true
+fms-maintenance.workspace = true
+fms-reservation.workspace = true
+fms-identity.workspace = true
+fms-calendar.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "signal", "time", "sync"] }
+sqlx.workspace = true
+uuid.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+dotenvy.workspace = true

@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) FILTER (WHERE s.shift_type = $4) AS \"same_type!\",\n                  count(*) FILTER (WHERE s.shift_type <> $4) AS \"other_types!\"\n             FROM fms.team_shifts s\n            WHERE s.team_id = $1 AND s.user_id = $2\n              AND s.shift_range && tstzrange($3, $5, '[)')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "same_type!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "other_types!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c3c66393209f696c1a3aaddba5a1ed9da01372830ede81cd268838c409c762f9"
+}

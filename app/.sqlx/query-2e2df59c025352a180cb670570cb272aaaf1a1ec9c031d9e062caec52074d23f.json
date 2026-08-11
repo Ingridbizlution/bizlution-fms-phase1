@@ -1,0 +1,154 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT si.id,\n                  si.facility_id,\n                  si.category,\n                  si.code::text AS \"code!\",\n                  si.name::text AS \"name!\",\n                  si.description,\n                  si.lead_time_minutes,\n                  si.default_duration_minutes,\n                  si.relative_offset_minutes,\n                  si.is_attachable_to_reservation,\n                  si.is_standalone_requestable,\n                  si.requires_approval,\n                  si.chargeable,\n                  si.unit_price::float8 AS \"unit_price\",\n                  si.currency::text AS \"currency\",\n                  si.unit_label::text AS \"unit_label\",\n                  si.max_quantity,\n                  si.form_schema AS \"form_schema!\",\n                  -- **`?` 是必須的，不是風格。** 這兩欄來自 LEFT JOIN，而\n                  -- `sla_policies.response_minutes` 在 schema 裡是 NOT NULL ——\n                  -- sqlx 因此把它推論成非空，於是任何**沒有 sla_policy_id 的\n                  -- 服務項目**都會讓整個清單以 500 收場（decode 遇到 NULL）。\n                  --\n                  -- 示範資料的三個項目剛好都有 SLA 政策，所以這個缺陷一直沒有\n                  -- 被觸發；`POST /facilities/{id}/service-items` 讓它可達之後\n                  -- 才被 `service_catalogue_slice.rs` 的 `a_` 抓到。\n                  sp.response_minutes AS \"response_minutes?\",\n                  sp.resolution_minutes AS \"resolution_minutes?\",\n                  si.icon::text AS \"icon\",\n                  si.display_order\n           FROM fms.service_items si\n           LEFT JOIN fms.sla_policies sp ON sp.id = si.sla_policy_id\n           WHERE (si.facility_id = $1 OR si.facility_id IS NULL)\n             AND si.is_active = true\n             AND si.deleted_at IS NULL\n             AND ($2::text IS NULL OR si.category = $2)\n             AND ($3::boolean IS NULL OR si.is_attachable_to_reservation = $3)\n             AND ($4::boolean IS NULL OR si.is_standalone_requestable = true)\n             AND ($5::text IS NULL\n                  OR (lpad(si.display_order::text, 10, '0') || '|' || si.code::text,\n                      si.id) > ($5::text, $6::uuid))\n           ORDER BY si.display_order, si.code, si.id\n           LIMIT $7",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "category",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "lead_time_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "default_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "relative_offset_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "is_attachable_to_reservation",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "is_standalone_requestable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "requires_approval",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "chargeable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "unit_price",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 14,
+        "name": "currency",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "unit_label",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "max_quantity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "form_schema!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 18,
+        "name": "response_minutes?",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "resolution_minutes?",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 20,
+        "name": "icon",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "display_order",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Bool",
+        "Bool",
+        "Text",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      null,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      true,
+      false,
+      false,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "2e2df59c025352a180cb670570cb272aaaf1a1ec9c031d9e062caec52074d23f"
+}

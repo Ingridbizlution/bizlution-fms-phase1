@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.work_orders SET\n          title              = coalesce($2, title),\n          description        = coalesce($3, description),\n          priority           = coalesce($4, priority),\n          team_id            = coalesce($5, team_id),\n          scheduled_start_at = coalesce($6, scheduled_start_at),\n          scheduled_end_at   = coalesce($7, scheduled_end_at),\n          payload            = coalesce($8, payload),\n          is_chargeback      = coalesce($9, is_chargeback),\n          chargeback_org_id  = coalesce($10, chargeback_org_id)\n        WHERE id = $1 AND deleted_at IS NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Text",
+        "Text",
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz",
+        "Jsonb",
+        "Bool",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6bc08fcd2c62c9711f0d9f17ccbc61713fa652d12baa5da93fd1bedce88958a4"
+}

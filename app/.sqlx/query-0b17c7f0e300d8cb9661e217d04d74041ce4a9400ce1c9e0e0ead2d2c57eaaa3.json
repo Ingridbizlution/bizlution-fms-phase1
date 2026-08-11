@@ -1,0 +1,162 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.bookable_resources SET\n             display_name             = coalesce($2, display_name),\n             is_bookable              = coalesce($3, is_bookable),\n             requires_approval        = coalesce($4, requires_approval),\n             requires_check_in        = coalesce($5, requires_check_in),\n             min_duration_minutes     = coalesce($6, min_duration_minutes),\n             max_duration_minutes     = coalesce($7, max_duration_minutes),\n             slot_granularity_minutes = coalesce($8, slot_granularity_minutes),\n             buffer_before_minutes    = coalesce($9, buffer_before_minutes),\n             buffer_after_minutes     = coalesce($10, buffer_after_minutes),\n             advance_booking_days     = coalesce($11, advance_booking_days),\n             min_notice_minutes       = coalesce($12, min_notice_minutes),\n             capacity                 = coalesce($13, capacity),\n             opening_hours            = coalesce($14, opening_hours),\n             attributes               = coalesce($15, attributes),\n             auto_release_minutes = CASE WHEN $16 THEN $17 ELSE auto_release_minutes END,\n             approver_role_code   = CASE WHEN $18 THEN $19 ELSE approver_role_code END,\n             max_active_per_user  = CASE WHEN $20 THEN $21 ELSE max_active_per_user END,\n             updated_at = clock_timestamp()\n           WHERE id = $1\n           RETURNING id, facility_id, resource_type,\n                     coalesce(spatial_node_id, asset_id) AS \"resource_id!\",\n                     display_name::text AS display_name,\n                     is_bookable, requires_approval,\n                     approver_role_code::text AS approver_role_code,\n                     requires_check_in, auto_release_minutes,\n                     min_duration_minutes, max_duration_minutes,\n                     slot_granularity_minutes, buffer_before_minutes,\n                     buffer_after_minutes, advance_booking_days,\n                     min_notice_minutes, max_active_per_user, capacity,\n                     opening_hours, attributes",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "resource_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "resource_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_bookable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "requires_approval",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "approver_role_code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "requires_check_in",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "auto_release_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "min_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "max_duration_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "slot_granularity_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "buffer_before_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "buffer_after_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "advance_booking_days",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "min_notice_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "max_active_per_user",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 18,
+        "name": "capacity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "opening_hours",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 20,
+        "name": "attributes",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Jsonb",
+        "Jsonb",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      null,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0b17c7f0e300d8cb9661e217d04d74041ce4a9400ce1c9e0e0ead2d2c57eaaa3"
+}

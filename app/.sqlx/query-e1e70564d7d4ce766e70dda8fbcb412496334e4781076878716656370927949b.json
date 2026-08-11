@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.asset_meter_readings\n          (tenant_id, asset_meter_id, reading_at, value, source, recorded_by)\n        VALUES ($1, $2, $3, $4::float8::numeric, $5, $6)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz",
+        "Float8",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e1e70564d7d4ce766e70dda8fbcb412496334e4781076878716656370927949b"
+}

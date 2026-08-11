@@ -1,0 +1,20 @@
+[package]
+name = "fms-asset"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+jsonschema = { workspace = true }
+fms-shared.workspace = true
+# 契約的 AssetDetail 內嵌 WorkOrder（include=open_work_orders），
+# 因此這個相依是契約本身造成的，不是實作偷懶。方向單一，無循環。
+fms-workorder.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tracing.workspace = true

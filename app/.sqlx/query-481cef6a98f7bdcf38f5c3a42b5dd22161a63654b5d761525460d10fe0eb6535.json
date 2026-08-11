@@ -1,0 +1,95 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, seq, title::text AS \"title!\", input_type,\n                  unit::text AS \"unit\", min_value::float8 AS \"min_value\",\n                  max_value::float8 AS \"max_value\", options,\n                  is_required, result_value, is_pass, notes, completed_at\n             FROM fms.work_order_tasks\n            WHERE work_order_id = $1 AND id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "seq",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 2,
+        "name": "title!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "input_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "unit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "min_value",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "max_value",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "options",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 8,
+        "name": "is_required",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "result_value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "is_pass",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "completed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      null,
+      null,
+      null,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "481cef6a98f7bdcf38f5c3a42b5dd22161a63654b5d761525460d10fe0eb6535"
+}

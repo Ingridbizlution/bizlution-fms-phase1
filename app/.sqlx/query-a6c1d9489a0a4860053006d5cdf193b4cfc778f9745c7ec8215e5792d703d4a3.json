@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.work_orders\n          (tenant_id, facility_id, wo_no, work_order_type, source, title, description,\n           asset_id, spatial_node_id, service_item_id, reservation_id,\n           requester_id, assignee_id, team_id, priority, status,\n           requested_start_at, payload, created_by,\n           maintenance_plan_id, maintenance_occurrence_id)\n        VALUES\n          ($1, $2, fms.next_document_no($1, 'WORK_ORDER', 'WO'), $3, $17, $4, $5,\n           $6, $7, $8, $9,\n           $10, $11, $12, coalesce($13, 'MEDIUM'), $14,\n           $15, coalesce($16, '{}'::jsonb), $10,\n           $18, $19)\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Varchar",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Jsonb",
+        "Text",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a6c1d9489a0a4860053006d5cdf193b4cfc778f9745c7ec8215e5792d703d4a3"
+}

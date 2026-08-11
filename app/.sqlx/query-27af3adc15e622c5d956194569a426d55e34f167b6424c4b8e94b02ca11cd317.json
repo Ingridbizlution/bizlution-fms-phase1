@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.event_outbox\n         SET status = 'SKIPPED', last_error = $2, published_at = clock_timestamp()\n         WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "27af3adc15e622c5d956194569a426d55e34f167b6424c4b8e94b02ca11cd317"
+}

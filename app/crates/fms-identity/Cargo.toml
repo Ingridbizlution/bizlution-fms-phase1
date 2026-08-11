@@ -1,0 +1,23 @@
+[package]
+name = "fms-identity"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fms-shared.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+jsonwebtoken.workspace = true
+argon2.workspace = true
+secrecy.workspace = true
+sha2.workspace = true
+base64.workspace = true
+# argon2 的驗證要跑在 blocking 池上，見 password::verify_async。
+tokio = { workspace = true, features = ["sync"] }

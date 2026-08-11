@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT p.id            AS \"id!\",\n               p.facility_id   AS \"facility_id!\",\n               p.code::text    AS \"code!\",\n               p.name::text    AS \"name!\",\n               p.template_id   AS \"template_id!\",\n               t.name::text    AS \"template_name!\",\n               CASE WHEN p.asset_id IS NOT NULL        THEN 'ASSET'\n                    WHEN p.spatial_node_id IS NOT NULL THEN 'SPATIAL_NODE'\n                    ELSE 'CATEGORY' END               AS \"target_type!\",\n               coalesce(p.asset_id, p.spatial_node_id, p.category_id) AS \"target_id!\",\n               CASE WHEN p.asset_id IS NOT NULL\n                      THEN (SELECT a2.name::text FROM fms.assets a2 WHERE a2.id = p.asset_id)\n                    WHEN p.spatial_node_id IS NOT NULL\n                      THEN (SELECT n2.name::text FROM fms.spatial_nodes n2\n                             WHERE n2.id = p.spatial_node_id)\n                    ELSE (SELECT c2.name::text FROM fms.asset_categories c2\n                           WHERE c2.id = p.category_id) END AS \"target_label\",\n               p.trigger_type  AS \"trigger_type!\",\n               p.rrule,\n               p.meter_code::text AS \"meter_code\",\n               p.meter_threshold::float8 AS \"meter_threshold\",\n               p.generate_lead_days AS \"generate_lead_days!\",\n               p.priority      AS \"priority!\",\n               p.assigned_team_id,\n               p.next_due_at,\n               p.is_active     AS \"is_active!\"\n        FROM fms.maintenance_plans p\n        JOIN fms.maintenance_templates t ON t.id = p.template_id\n        JOIN fms.assets a ON a.id = $1 AND a.deleted_at IS NULL\n        LEFT JOIN fms.spatial_nodes sn ON sn.id = a.spatial_node_id\n        WHERE p.is_active\n          AND ( p.asset_id = a.id\n                OR ( p.spatial_node_id IS NOT NULL\n                     AND sn.node_path OPERATOR(public.<@)\n                           (SELECT n.node_path FROM fms.spatial_nodes n\n                             WHERE n.id = p.spatial_node_id) )\n                OR p.category_id = a.category_id )\n        ORDER BY p.code\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "template_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "template_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "target_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "target_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "target_label",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "trigger_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "rrule",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "meter_code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "meter_threshold",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 13,
+        "name": "generate_lead_days!",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 14,
+        "name": "priority!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "assigned_team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 16,
+        "name": "next_due_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 17,
+        "name": "is_active!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      false,
+      null,
+      null,
+      null,
+      null,
+      false,
+      true,
+      null,
+      null,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "10e3c0cebe5c2fe17a024733e0fba3f2a7ce9a3786e802a42836936f9dd5872f"
+}

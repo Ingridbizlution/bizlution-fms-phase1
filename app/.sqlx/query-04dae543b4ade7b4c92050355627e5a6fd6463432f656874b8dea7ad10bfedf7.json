@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.calendar_integrations\n                SET last_synced_at = clock_timestamp(), last_sync_error = NULL\n              WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "04dae543b4ade7b4c92050355627e5a6fd6463432f656874b8dea7ad10bfedf7"
+}

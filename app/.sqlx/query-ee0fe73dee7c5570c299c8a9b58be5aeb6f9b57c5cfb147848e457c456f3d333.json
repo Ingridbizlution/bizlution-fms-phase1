@@ -1,0 +1,139 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT n.id, n.facility_id, n.parent_id,\n               n.node_type_code::text AS \"node_type_code!\",\n               n.code::text AS \"code!\", n.name::text AS \"name!\",\n               n.node_path::text AS \"node_path!\", n.depth,\n               n.floor_level, n.floor_label::text AS \"floor_label\",\n               n.area_sqm::float8 AS \"area_sqm\", n.capacity, n.is_bookable, n.status,\n               n.health_score::float8 AS \"health_score\",\n               n.utilization_pct::float8 AS \"utilization_pct\",\n               n.bim_element_id::text AS \"bim_element_id\",\n               CASE WHEN $7::bool THEN\n                 (SELECT count(*) FROM fms.assets a\n                   WHERE a.spatial_node_id = n.id AND a.deleted_at IS NULL)\n               ELSE 0 END AS \"asset_count!\",\n               CASE WHEN $7::bool THEN\n                 (SELECT count(*) FROM fms.work_orders w\n                   WHERE w.spatial_node_id = n.id AND w.deleted_at IS NULL\n                     AND w.status NOT IN ('CLOSED','CANCELLED','REJECTED'))\n               ELSE 0 END AS \"open_work_order_count!\"\n        FROM fms.spatial_nodes n\n        WHERE n.deleted_at IS NULL\n          AND n.facility_id = $1\n          AND ($2::uuid IS NULL OR n.parent_id = $2)\n          AND ($3::uuid IS NULL OR n.node_path OPERATOR(public.<@)\n                 (SELECT r.node_path FROM fms.spatial_nodes r WHERE r.id = $3))\n          AND ($4::text IS NULL OR n.node_type_code = $4)\n          AND ($5::int IS NULL OR n.floor_level = $5)\n          AND (NOT $6::bool OR n.is_bookable)\n          AND ($8::text IS NULL OR (n.node_path::text, n.id) > ($8::text, $9::uuid))\n        ORDER BY n.node_path, n.id\n        LIMIT $10\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "node_type_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "node_path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "depth",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 8,
+        "name": "floor_level",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "floor_label",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "area_sqm",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 11,
+        "name": "capacity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "is_bookable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "health_score",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 15,
+        "name": "utilization_pct",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 16,
+        "name": "bim_element_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "asset_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 18,
+        "name": "open_work_order_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Text",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      false,
+      true,
+      null,
+      null,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ee0fe73dee7c5570c299c8a9b58be5aeb6f9b57c5cfb147848e457c456f3d333"
+}

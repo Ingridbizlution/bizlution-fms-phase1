@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT p.id\n        FROM fms.maintenance_plans p\n        WHERE p.is_active\n          AND p.trigger_type IN ('CALENDAR', 'HYBRID')\n          AND p.rrule IS NOT NULL\n          AND p.next_due_at IS NOT NULL\n          AND p.next_due_at <= clock_timestamp()\n                               + (p.generate_lead_days::int * interval '1 day')\n        ORDER BY p.next_due_at\n        LIMIT $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "30058dfaf71b437852c80c2d92f12e1d38afac6e73189d01b059d4ae19a1d657"
+}

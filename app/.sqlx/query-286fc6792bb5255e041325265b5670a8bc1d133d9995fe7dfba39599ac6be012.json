@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT b.id, b.facility_id, b.name::text AS \"name!\",\n                  b.source_format, b.version_label::text AS version_label,\n                  b.storage_bucket::text AS \"storage_bucket!\",\n                  b.storage_key, b.viewer_urn,\n                  b.discipline::text AS discipline, b.status,\n                  b.element_count, b.mapped_node_count, b.mapped_asset_count,\n                  jsonb_array_length(b.unresolved_elements) AS \"unresolved_count!\",\n                  b.parse_report AS \"parse_report!\", b.parsed_at,\n                  b.uploaded_by, u.display_name::text AS uploaded_by_name,\n                  b.created_at, b.updated_at\n             FROM fms.bim_models b\n             LEFT JOIN fms.users u ON u.id = b.uploaded_by\n            WHERE b.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "source_format",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "version_label",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "storage_bucket!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "viewer_urn",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "discipline",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "element_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "mapped_node_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "mapped_asset_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "unresolved_count!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "parse_report!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 15,
+        "name": "parsed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "uploaded_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 17,
+        "name": "uploaded_by_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 19,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      null,
+      null,
+      false,
+      true,
+      null,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      true,
+      true,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "286fc6792bb5255e041325265b5670a8bc1d133d9995fe7dfba39599ac6be012"
+}

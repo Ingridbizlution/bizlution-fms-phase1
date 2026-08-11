@@ -1,0 +1,24 @@
+[package]
+name = "fms-maintenance"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fms-shared.workspace = true
+# PM 產生器要開工單，重用工單模組的寫入路徑而不是自己 INSERT ——
+# `wo_no` 產生、必填欄位、狀態初值只該有一份定義。方向單一，無循環。
+fms-workorder.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+
+# relay 的機制（claim／退避／停放）；本 crate 提供接上它的政策。
+fms-worker.workspace = true
+tokio = { workspace = true, features = ["time", "sync"] }
+

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) AS \"n!\"\n             FROM fms.work_orders w\n             LEFT JOIN fms.work_order_statuses st ON st.code = w.status\n            WHERE w.team_id = $1 AND w.assignee_id IS NULL\n              AND w.deleted_at IS NULL AND st.is_terminal IS NOT TRUE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "n!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "288d7f4a79f3e00a3e3ac8da86025e648bf66ed26071a7c62293722f62f581b2"
+}

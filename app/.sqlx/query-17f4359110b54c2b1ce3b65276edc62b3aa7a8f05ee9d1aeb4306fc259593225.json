@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, tenant_id, event_type::text AS \"event_type!\",\n                  aggregate_type::text AS \"aggregate_type!\", aggregate_id,\n                  payload, attempt_count\n           FROM fms.event_outbox\n           WHERE status IN ('PENDING', 'FAILED')\n             AND available_at <= clock_timestamp()\n             AND ($2::text[] IS NULL OR event_type = ANY($2))\n           ORDER BY status, available_at, id\n           FOR UPDATE SKIP LOCKED\n           LIMIT $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "tenant_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "event_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "aggregate_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "aggregate_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "payload",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
+        "name": "attempt_count",
+        "type_info": "Int2"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "17f4359110b54c2b1ce3b65276edc62b3aa7a8f05ee9d1aeb4306fc259593225"
+}

@@ -1,0 +1,256 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT w.id,\n               w.wo_no::text            AS \"wo_no!\",\n               w.facility_id,\n               w.work_order_type,\n               w.source,\n               w.title::text            AS \"title!\",\n               w.description,\n               w.status,\n               s.category               AS \"status_category!\",\n               w.priority,\n               w.asset_id,\n               a.asset_code::text       AS \"asset_code\",\n               a.name::text             AS \"asset_name\",\n               w.spatial_node_id,\n               sn.name::text            AS \"node_name\",\n               sn.node_path::text       AS \"node_path\",\n               w.service_item_id,\n               w.reservation_id,\n               w.alarm_id,\n               w.requester_id,\n               ru.display_name::text    AS \"requester_name\",\n               w.assignee_id,\n               au.display_name::text    AS \"assignee_name\",\n               w.team_id,\n               w.payload                AS \"payload!\",\n               w.scheduled_start_at,\n               w.scheduled_end_at,\n               w.actual_start_at,\n               w.actual_end_at,\n               w.response_due_at,\n               w.resolution_due_at,\n               w.sla_state,\n               w.labor_minutes,\n               -- 契約有 total_cost，schema 只有三個分項且沒有生成欄位，\n               -- 因此在查詢裡加總。放在 SQL 而非 Rust，是為了讓\n               -- 日後要用它排序或過濾時不需要改兩個地方。\n               (w.labor_cost + w.parts_cost + w.other_cost)::float8 AS \"total_cost\",\n               w.satisfaction_score,\n               w.resolution_notes,\n               w.version,\n               w.created_at,\n               w.updated_at,\n               w.completed_at\n        FROM fms.work_orders w\n        JOIN fms.work_order_statuses s ON s.code = w.status\n        LEFT JOIN fms.assets a        ON a.id  = w.asset_id\n        LEFT JOIN fms.spatial_nodes sn ON sn.id = w.spatial_node_id\n        LEFT JOIN fms.users ru        ON ru.id = w.requester_id\n        LEFT JOIN fms.users au        ON au.id = w.assignee_id\n        WHERE w.deleted_at IS NULL AND w.id = ANY($1)\n        ORDER BY w.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "wo_no!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "work_order_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "source",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "title!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "status_category!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "priority",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "asset_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 11,
+        "name": "asset_code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "asset_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "spatial_node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 14,
+        "name": "node_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "node_path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "service_item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 17,
+        "name": "reservation_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 18,
+        "name": "alarm_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 19,
+        "name": "requester_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 20,
+        "name": "requester_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "assignee_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 22,
+        "name": "assignee_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 23,
+        "name": "team_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 24,
+        "name": "payload!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 25,
+        "name": "scheduled_start_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 26,
+        "name": "scheduled_end_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 27,
+        "name": "actual_start_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 28,
+        "name": "actual_end_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 29,
+        "name": "response_due_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 30,
+        "name": "resolution_due_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 31,
+        "name": "sla_state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 32,
+        "name": "labor_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 33,
+        "name": "total_cost",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 34,
+        "name": "satisfaction_score",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 35,
+        "name": "resolution_notes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 36,
+        "name": "version",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 37,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 38,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 39,
+        "name": "completed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      false,
+      null,
+      true,
+      false,
+      false,
+      false,
+      true,
+      null,
+      null,
+      true,
+      null,
+      null,
+      true,
+      true,
+      true,
+      true,
+      null,
+      true,
+      null,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      null,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "6058de19de9b2ff07d8970b1e0e8d858e3460251ee9d648d540972618419c7ed"
+}

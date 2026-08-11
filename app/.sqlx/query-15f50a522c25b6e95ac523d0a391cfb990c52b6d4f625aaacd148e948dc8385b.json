@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.id, u.display_name::text AS \"author_name\",\n                  c.visibility, c.body AS \"body!\", c.created_at\n             FROM fms.work_order_comments c\n             LEFT JOIN fms.users u ON u.id = c.author_id\n            WHERE c.work_order_id = $1\n            ORDER BY c.created_at, c.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "visibility",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "body!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "15f50a522c25b6e95ac523d0a391cfb990c52b6d4f625aaacd148e948dc8385b"
+}

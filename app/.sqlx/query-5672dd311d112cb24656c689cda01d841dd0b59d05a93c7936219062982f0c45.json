@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH RECURSIVE e AS (\n          SELECT CASE WHEN r.relation_type = 'DEPENDS_ON'\n                      THEN r.to_asset_id ELSE r.from_asset_id END AS supplier_id,\n                 CASE WHEN r.relation_type = 'DEPENDS_ON'\n                      THEN r.from_asset_id ELSE r.to_asset_id END AS dependent_id\n          FROM fms.asset_relations r\n        ),\n        adj AS (\n          -- 往上游走：從被影響側走到供應側\n          SELECT dependent_id AS src, supplier_id  AS dst, 'upstream'::text   AS dir FROM e\n          UNION ALL\n          -- 往下游走：從供應側走到被影響側\n          SELECT supplier_id  AS src, dependent_id AS dst, 'downstream'::text AS dir FROM e\n        ),\n        walk AS (\n          SELECT $1::uuid AS asset_id, 0 AS depth\n          UNION\n          SELECT adj.dst, w.depth + 1\n          FROM walk w\n          JOIN adj ON adj.src = w.asset_id\n          WHERE w.depth < $2::int\n            AND ($3::text = 'both' OR adj.dir = $3::text)\n        )\n        SELECT a.id            AS \"id!\",\n               a.asset_code::text AS \"asset_code!\",\n               a.name::text    AS \"name!\",\n               ac.code::text   AS \"category_code!\",\n               a.status        AS \"status!\",\n               a.criticality   AS \"criticality!\"\n        FROM (SELECT DISTINCT asset_id FROM walk) n\n        JOIN fms.assets a ON a.id = n.asset_id AND a.deleted_at IS NULL\n        JOIN fms.asset_categories ac ON ac.id = a.category_id\n        ORDER BY a.asset_code\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "asset_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "category_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "status!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "criticality!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "5672dd311d112cb24656c689cda01d841dd0b59d05a93c7936219062982f0c45"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT w.id FROM fms.work_orders w\n            WHERE w.asset_id = $1 AND w.deleted_at IS NULL\n              AND w.status NOT IN ('CLOSED','CANCELLED','REJECTED')\n            ORDER BY w.created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "43e28191326494192612041ee209ac1756a36fd330a54bb3dbd0f0370be2781f"
+}

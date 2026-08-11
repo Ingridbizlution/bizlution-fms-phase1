@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO fms.team_shifts\n             (tenant_id, team_id, user_id, shift_start, shift_end, shift_type)\n           VALUES (fms.current_tenant_id(), $1, $2, $3, $4, $5)\n           RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f76fa07cd54b6a16a28529b62b31195dcfe9df9d057666709840d412fc12ecb3"
+}

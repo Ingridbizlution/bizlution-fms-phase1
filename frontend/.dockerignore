@@ -1,0 +1,6 @@
+node_modules
+dist
+mock-server
+.env.development
+.env.production.local
+.git

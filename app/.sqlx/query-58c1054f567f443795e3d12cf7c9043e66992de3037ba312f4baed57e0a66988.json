@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO fms.reservations\n                 (tenant_id, facility_id, bookable_resource_id, reservation_no,\n                  resource_type, resource_id, organizer_id, title,\n                  party_size, start_at, end_at, status, created_via, external_event_id)\n               VALUES\n                 ($1, $2, $3, fms.next_document_no($1, 'RESERVATION', 'RSV'),\n                  'SPATIAL_NODE', $4, $5, $6, 1, $7, $8, 'CONFIRMED', 'OUTLOOK', $9)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Timestamptz",
+        "Timestamptz",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "58c1054f567f443795e3d12cf7c9043e66992de3037ba312f4baed57e0a66988"
+}

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH open_wo AS (\n             SELECT count(*) AS n\n               FROM fms.work_orders w\n               LEFT JOIN fms.work_order_statuses st ON st.code = w.status\n              WHERE w.service_item_id = $1\n                AND w.deleted_at IS NULL\n                AND st.is_terminal IS NOT TRUE\n           ), softened AS (\n             UPDATE fms.service_items\n                SET deleted_at = clock_timestamp(), is_active = false,\n                    updated_at = clock_timestamp()\n              WHERE id = $1 AND deleted_at IS NULL\n             RETURNING id\n           )\n           SELECT (SELECT n FROM open_wo) AS \"open_work_orders!\",\n                  EXISTS (SELECT 1 FROM softened) AS \"deleted!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "open_work_orders!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "deleted!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "9314e70ffb19b373d4a41fcf8069168462d241380e66bd2f9b9648c2aedca205"
+}

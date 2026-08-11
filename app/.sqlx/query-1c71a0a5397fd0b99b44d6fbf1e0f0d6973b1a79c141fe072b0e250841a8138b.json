@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.part_code::text AS \"part_code!\",\n                  p.name::text      AS \"name!\",\n                  wp.quantity_used::float8 AS \"quantity_used!\",\n                  wp.total_cost::float8    AS \"total_cost\"\n             FROM fms.work_order_parts wp\n             JOIN fms.parts p ON p.id = wp.part_id\n            WHERE wp.work_order_id = $1\n            ORDER BY p.part_code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "part_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "quantity_used!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_cost",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1c71a0a5397fd0b99b44d6fbf1e0f0d6973b1a79c141fe072b0e250841a8138b"
+}

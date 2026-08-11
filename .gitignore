@@ -1,0 +1,37 @@
+# 本機環境變數（含三個資料庫角色的密碼）— 絕不進版控
+# 需要新環境時：cd docker && cp .env.example .env
+.env
+docker/.env
+
+# make backup 的輸出
+docker/backups/
+*.dump
+
+# 套用修正前的原始檔備份（git 生效後即由版本歷史取代，可安全刪除）
+_backup_before_fixes/
+
+# macOS / LibreOffice
+.DS_Store
+.~lock.*#
+
+# macOS／Finder 風格的重複檔名。sqlx 產生的檔名不含空白，因此這個樣式
+# 一定是誤複製的產物 —— 它們曾兩次混進 .sqlx 並被提交。
+app/.sqlx/* [0-9].json
+
+# api/reference-site/build.py 的產生物（openapi.yaml／FRONTEND-GETTING-STARTED.md
+# 轉出來的 JSON／HTML）。CI 發布前會重新產生，進版控只會製造「跟原始檔案
+# 是否同步」的第二個問題。
+api/reference-site/data/
+
+# Rust build output（app/ 工作區）
+app/target/
+
+# Python（services/bim-worker）
+services/*/.venv/
+services/*/__pycache__/
+services/*/**/__pycache__/
+services/*/*.egg-info/
+services/*/.pytest_cache/
+
+# Redis 快照。docker compose 的 redis 會在專案根目錄產生它。
+*.rdb

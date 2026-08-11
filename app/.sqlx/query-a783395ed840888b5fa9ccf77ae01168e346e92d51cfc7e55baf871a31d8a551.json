@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT t.from_status::text AS \"from_status\",\n               t.action::text      AS \"action!\",\n               t.to_status::text   AS \"to_status!\",\n               u.display_name::text AS \"actor_name\",\n               t.reason::text      AS \"reason\",\n               t.occurred_at\n        FROM fms.work_order_transitions t\n        LEFT JOIN fms.users u ON u.id = t.actor_user_id\n        WHERE t.work_order_id = $1\n        ORDER BY t.occurred_at, t.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "from_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "action!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "to_status!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "occurred_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "a783395ed840888b5fa9ccf77ae01168e346e92d51cfc7e55baf871a31d8a551"
+}

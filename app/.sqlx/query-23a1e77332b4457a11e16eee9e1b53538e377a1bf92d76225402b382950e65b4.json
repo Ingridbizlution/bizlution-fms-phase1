@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT ON (b.id)\n               coalesce(b.spatial_node_id, b.asset_id) AS \"resource_id!\",\n               b.display_name::text AS \"display_name!\",\n               b.resource_type    AS \"resource_type!\",\n               b.capacity         AS \"capacity!\",\n               CASE\n                 WHEN r.id IS NULL AND h.id IS NULL THEN 'FREE'\n                 WHEN r.status = 'CHECKED_IN'       THEN 'OCCUPIED'\n                 WHEN r.id IS NOT NULL              THEN 'RESERVED'\n                 ELSE 'HELD'\n               END AS \"state!\",\n               -- 這六個都來自 LEFT JOIN：沒有匹配列時是 NULL，但 sqlx 會沿用\n               -- 來源欄位的 NOT NULL 推斷（`reservations.id` 是主鍵、\n               -- `users.display_name` 是 NOT NULL），因此必須用 `?` 明確標成可空。\n               -- 不標的話編譯照樣通過，執行期才會 UnexpectedNullError。\n               r.id               AS \"reservation_id?\",\n               r.title::text      AS \"title?\",\n               u.display_name::text AS \"organizer_name?\",\n               r.is_private       AS \"is_private?\",\n               coalesce(r.start_at, h.start_at) AS \"start_at?\",\n               coalesce(r.end_at, h.end_at)     AS \"end_at?\"\n        FROM fms.bookable_resources b\n        LEFT JOIN fms.reservations r\n               ON r.bookable_resource_id = b.id\n              AND r.status IN ('CONFIRMED','CHECKED_IN')\n              AND clock_timestamp() >= r.start_at\n              AND clock_timestamp() <  r.end_at\n        LEFT JOIN fms.users u ON u.id = r.organizer_id\n        LEFT JOIN fms.reservation_holds h\n               ON h.bookable_resource_id = b.id\n              AND h.status = 'ACTIVE'\n              AND h.expires_at > clock_timestamp()\n              AND clock_timestamp() >= h.start_at\n              AND clock_timestamp() <  h.end_at\n        WHERE b.facility_id = $1 AND b.is_bookable\n        -- 已報到 > 已預約 > 佔位 > 空閒：同一刻若有多筆，顯示最確定的那個\n        ORDER BY b.id,\n                 (r.status = 'CHECKED_IN') DESC NULLS LAST,\n                 (r.id IS NOT NULL) DESC,\n                 b.display_name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "resource_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "resource_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "capacity!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "state!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "reservation_id?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "title?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "organizer_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "is_private?",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "start_at?",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "end_at?",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      false,
+      false,
+      null,
+      false,
+      null,
+      null,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "23a1e77332b4457a11e16eee9e1b53538e377a1bf92d76225402b382950e65b4"
+}

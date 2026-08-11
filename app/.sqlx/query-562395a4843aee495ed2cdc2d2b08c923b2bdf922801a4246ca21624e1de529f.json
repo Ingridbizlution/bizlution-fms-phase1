@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT d::date AS \"day!\",\n                  fms.service_item_windows($1, d::date) AS \"resolved!\"\n             FROM generate_series($2::date, $2::date + ($3::int - 1), interval '1 day') d",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "day!",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 1,
+        "name": "resolved!",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Date",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "562395a4843aee495ed2cdc2d2b08c923b2bdf922801a4246ca21624e1de529f"
+}

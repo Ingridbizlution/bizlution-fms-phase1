@@ -1,0 +1,61 @@
+#!/bin/sh
+# =============================================================================
+# 拒絕直接推送 main
+# =============================================================================
+# 這個 hook 存在的理由是一件實際發生過的事：**`make test` 在 main 上壞了三個
+# commit，沒有人發現。** CI 有跑、有紅，但 commit 已經在 main 上了，而紅燈
+# 只是 GitHub 上一個沒有人點開的叉。
+#
+# 正確的防線是 GitHub 的 branch protection／ruleset（伺服器端，繞不過），
+# 但這個 repo 是私有的，而那個功能需要 GitHub Pro 或把 repo 轉公開。
+# 兩者都是商業決定，因此先用這個。
+#
+# **這個 hook 擋不住決心。** `git push --no-verify` 就過了。它的作用是把
+# 「不小心忘了」變成「刻意覆寫」—— 而我們遇到的失效模式正是前者。
+#
+# 啟用方式（一次就好，`make hooks` 也會做）：
+#
+#     git config core.hooksPath .githooks
+#
+# 用 core.hooksPath 而不是 .git/hooks：後者不進版控，新的 clone 不會有它，
+# 也就是「宣告了但沒人讀」的另一個版本。
+# =============================================================================
+
+remote="$1"
+protected="main master"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # 刪除分支的推送（local_sha 全為 0）不在此攔阻範圍 —— 刪 main 本來就會
+  # 被 GitHub 拒絕，而刪別的分支是正常操作。
+  case "$local_sha" in
+    *[!0]*) ;;
+    *) continue ;;
+  esac
+
+  branch=${remote_ref#refs/heads/}
+  for p in $protected; do
+    if [ "$branch" = "$p" ]; then
+      cat >&2 <<MSG
+
+  ✗ 拒絕直接推送 $branch（remote: $remote）
+
+    改走 PR，讓 CI 在合併前擋住問題：
+
+        git switch -c feat/<描述>
+        git push -u origin feat/<描述>
+        gh pr create --base $p
+
+    這條規則存在的原因：make test 曾在 main 上壞了三個 commit 沒人發現。
+    CI 有跑、有紅，但東西已經在 main 上了。
+
+    真的必須直接推（例如修 CI 本身）：
+
+        git push --no-verify
+
+MSG
+      exit 1
+    fi
+  done
+done
+
+exit 0

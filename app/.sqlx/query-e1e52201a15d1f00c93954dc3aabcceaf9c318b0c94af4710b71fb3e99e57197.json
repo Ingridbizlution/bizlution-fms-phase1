@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH target AS (\n             -- 別名不加 `!`：sqlx 不改寫 SQL，`AS \"x!\"` 會讓 Postgres 真的\n             -- 建一個叫 `x!` 的欄位，於是 CTE 內部的 `t.x` 找不到它。\n             -- `!`（非空覆寫）只寫在最外層的投影上。\n             SELECT h.id, h.status, h.user_id, h.facility_id,\n                    h.user_id = fms.current_user_id() AS is_mine\n               FROM fms.reservation_holds h\n              WHERE h.hold_token = $1\n           ), released AS (\n             UPDATE fms.reservation_holds h\n                SET status = 'RELEASED'\n               FROM target t\n              WHERE h.id = t.id AND t.is_mine AND t.status = 'ACTIVE'\n             RETURNING h.id\n           )\n           SELECT t.status, t.is_mine AS \"is_mine!\", t.facility_id,\n                  EXISTS (SELECT 1 FROM released) AS \"released!\"\n             FROM target t",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_mine!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "released!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "e1e52201a15d1f00c93954dc3aabcceaf9c318b0c94af4710b71fb3e99e57197"
+}

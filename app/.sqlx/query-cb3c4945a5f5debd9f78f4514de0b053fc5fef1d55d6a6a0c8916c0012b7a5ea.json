@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT r.id\n        FROM fms.reservations r\n        WHERE r.status = 'CONFIRMED'\n          AND r.requires_check_in\n          AND r.checked_in_at IS NULL\n          AND r.auto_release_at IS NOT NULL\n          AND r.auto_release_at <= clock_timestamp()\n        ORDER BY r.auto_release_at\n        LIMIT $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "cb3c4945a5f5debd9f78f4514de0b053fc5fef1d55d6a6a0c8916c0012b7a5ea"
+}

@@ -1,0 +1,16 @@
+[package]
+name = "fms-loadtest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+# **不是 workspace 的預設成員。** 這個 crate 只在做容量規劃時跑，
+# 而它把 reqwest 拉進依賴樹 —— 讓 `cargo build --workspace` 每次都編它
+# 是替一件很少做的事付固定成本。
+[dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }

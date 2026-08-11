@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT f.id, f.org_id, f.code::text AS \"code!\", f.name::text AS \"name!\",\n               f.facility_type, f.address_line1, f.city::text AS \"city\",\n               f.country_code::text AS \"country_code!\", f.timezone::text AS \"timezone!\",\n               f.latitude::float8 AS \"latitude\", f.longitude::float8 AS \"longitude\",\n               f.gross_area_sqm::float8 AS \"gross_area_sqm\",\n               f.operating_hours AS \"operating_hours!\", f.status, f.updated_at\n        FROM fms.facilities f\n        WHERE f.id = $1 AND f.deleted_at IS NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "facility_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "address_line1",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "city",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "country_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "timezone!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "latitude",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 10,
+        "name": "longitude",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 11,
+        "name": "gross_area_sqm",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 12,
+        "name": "operating_hours!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 13,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a0d104a3b455b605b6f45478847d9356cf08e9ba5903afbbfe292dd2f2a7bccb"
+}

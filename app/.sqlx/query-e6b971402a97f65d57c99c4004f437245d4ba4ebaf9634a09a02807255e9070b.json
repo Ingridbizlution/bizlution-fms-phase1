@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.assets SET\n          facility_id       = coalesce($2, facility_id),\n          category_id       = coalesce($3, category_id),\n          asset_code        = coalesce($4, asset_code),\n          name              = coalesce($5, name),\n          spatial_node_id   = coalesce($6, spatial_node_id),\n          parent_asset_id   = coalesce($7, parent_asset_id),\n          asset_model_id    = coalesce($8, asset_model_id),\n          serial_no         = coalesce($9, serial_no),\n          criticality       = coalesce($10, criticality),\n          status            = coalesce($11, status),\n          install_date      = coalesce($12, install_date),\n          warranty_end_date = coalesce($13, warranty_end_date),\n          custodian_user_id = coalesce($14, custodian_user_id),\n          specifications    = coalesce($15, specifications),\n          attributes        = coalesce($16, attributes)\n        WHERE id = $1 AND deleted_at IS NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Text",
+        "Text",
+        "Date",
+        "Date",
+        "Uuid",
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e6b971402a97f65d57c99c4004f437245d4ba4ebaf9634a09a02807255e9070b"
+}

@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.id, r.status, r.start_at, r.end_at\n                 FROM fms.reservations r\n                 JOIN fms.bookable_resources b ON b.id = r.bookable_resource_id\n                WHERE r.tenant_id = $1 AND b.spatial_node_id = $2\n                  AND r.status IN ('PENDING_APPROVAL','CONFIRMED','CHECKED_IN')\n                  AND r.time_range && tstzrange($3, $4, '[)')\n                LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "start_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "end_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5baa0f81a9568aade32f7e74779196a92cdb673b5e0d2a2420a8f46640100775"
+}

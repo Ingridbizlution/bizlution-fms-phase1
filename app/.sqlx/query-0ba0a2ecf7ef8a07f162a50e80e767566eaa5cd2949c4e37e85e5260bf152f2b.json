@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             (SELECT count(*) FROM fms.assets c\n               WHERE c.parent_asset_id = $1 AND c.deleted_at IS NULL)\n               AS \"children!\",\n             (SELECT count(*) FROM fms.work_orders w\n               WHERE w.asset_id = $1\n                 AND w.status NOT IN ('CLOSED','CANCELLED','REJECTED'))\n               AS \"open_work_orders!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "children!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "open_work_orders!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "0ba0a2ecf7ef8a07f162a50e80e767566eaa5cd2949c4e37e85e5260bf152f2b"
+}

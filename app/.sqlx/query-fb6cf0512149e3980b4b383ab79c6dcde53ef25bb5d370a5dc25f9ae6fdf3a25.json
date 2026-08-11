@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT a.id, a.asset_code::text AS \"asset_code!\"\n        FROM fms.maintenance_plans p\n        JOIN fms.assets a\n          ON a.deleted_at IS NULL\n         AND a.facility_id = p.facility_id\n         AND ( p.asset_id = a.id\n               OR ( p.spatial_node_id IS NOT NULL\n                    AND EXISTS (\n                      SELECT 1 FROM fms.spatial_nodes sn, fms.spatial_nodes root\n                       WHERE sn.id = a.spatial_node_id\n                         AND root.id = p.spatial_node_id\n                         AND sn.node_path OPERATOR(public.<@) root.node_path) )\n               OR p.category_id = a.category_id )\n        WHERE p.id = $1\n        ORDER BY a.asset_code\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "asset_code!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "fb6cf0512149e3980b4b383ab79c6dcde53ef25bb5d370a5dc25f9ae6fdf3a25"
+}

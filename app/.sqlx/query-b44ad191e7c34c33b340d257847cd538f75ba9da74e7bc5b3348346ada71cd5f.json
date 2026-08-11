@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.assets\n                      SET bim_element_id = $1, updated_at = clock_timestamp()\n                    WHERE id = $2 AND facility_id = $3 AND deleted_at IS NULL\n                  RETURNING true AS \"ok!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ok!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b44ad191e7c34c33b340d257847cd538f75ba9da74e7bc5b3348346ada71cd5f"
+}

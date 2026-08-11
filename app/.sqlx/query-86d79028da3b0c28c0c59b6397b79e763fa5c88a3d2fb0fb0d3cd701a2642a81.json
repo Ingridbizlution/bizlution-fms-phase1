@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.work_order_parts\n          (tenant_id, work_order_id, part_id, quantity_planned, quantity_used,\n           unit_cost, total_cost, issued_from_stock_id, issued_at, issued_by)\n        SELECT $1, $2, $3, 0, $4::float8::numeric,\n               p.unit_cost,\n               -- 成本在領用時**快照**：料件單價日後調整不該改寫已完成工單的成本。\n               p.unit_cost * $4::float8::numeric,\n               $5, clock_timestamp(), $6\n        FROM fms.parts p\n        WHERE p.id = $3\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Float8",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "86d79028da3b0c28c0c59b6397b79e763fa5c88a3d2fb0fb0d3cd701a2642a81"
+}

@@ -1,0 +1,155 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT a.id,\n               a.facility_id,\n               a.spatial_node_id,\n               sn.node_path::text AS \"spatial_node_path\",\n               a.asset_code::text AS \"asset_code!\",\n               a.name::text AS \"name!\",\n               a.serial_no::text AS \"serial_no\",\n               ac.code::text AS \"category_code!\",\n               a.asset_model_id,\n               a.parent_asset_id,\n               a.criticality,\n               a.status,\n               a.install_date,\n               a.warranty_end_date,\n               a.health_score::float8 AS \"health_score\",\n               a.last_telemetry_at,\n               (SELECT count(*) FROM fms.work_orders w\n                 WHERE w.asset_id = a.id\n                   AND w.status NOT IN ('CLOSED','CANCELLED','REJECTED'))\n                 AS \"open_work_order_count!\",\n               (SELECT count(*) FROM fms.alarms al\n                 WHERE al.asset_id = a.id AND al.status = 'ACTIVE')\n                 AS \"active_alarm_count!\",\n               a.specifications AS \"specifications!\",\n               a.attributes AS \"attributes!\",\n               a.version,\n               a.created_at,\n               a.updated_at\n        FROM fms.assets a\n        JOIN fms.asset_categories ac ON ac.id = a.category_id\n        LEFT JOIN fms.spatial_nodes sn ON sn.id = a.spatial_node_id\n        WHERE a.deleted_at IS NULL\n          AND ($1::uuid[] IS NULL OR a.id = ANY($1))\n          AND ($2::uuid IS NULL OR a.parent_asset_id = $2)\n        ORDER BY a.asset_code\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "facility_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "spatial_node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "spatial_node_path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "asset_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "serial_no",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "category_code!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "asset_model_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "parent_asset_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "criticality",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "install_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 13,
+        "name": "warranty_end_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 14,
+        "name": "health_score",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 15,
+        "name": "last_telemetry_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "open_work_order_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 17,
+        "name": "active_alarm_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 18,
+        "name": "specifications!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 19,
+        "name": "attributes!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 20,
+        "name": "version",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 21,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 22,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      null,
+      true,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d898a812e255acb141b36b2c2b04306b5b9a6abdff0ad4b6a26c0c782729dc10"
+}

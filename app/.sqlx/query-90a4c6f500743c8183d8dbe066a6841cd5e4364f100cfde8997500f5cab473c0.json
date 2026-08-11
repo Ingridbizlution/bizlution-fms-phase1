@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT t.to_status       AS \"to_status!\",\n               t.required_permission,\n               t.required_fields AS \"required_fields!\",\n               t.side_effects    AS \"side_effects!\",\n               act.label_zh::text AS \"label_zh\"\n        FROM fms.work_orders w\n        JOIN fms.work_order_transitions_allowed t\n          ON t.is_active\n         AND (t.tenant_id IS NULL OR t.tenant_id = w.tenant_id)\n         AND (t.work_order_type IS NULL OR t.work_order_type = w.work_order_type)\n         AND t.from_status = w.status\n         AND t.action = $2\n        LEFT JOIN fms.work_order_actions act ON act.code = t.action\n        WHERE w.id = $1\n        ORDER BY t.tenant_id NULLS LAST, t.work_order_type NULLS LAST\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "to_status!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "required_permission",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "required_fields!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 3,
+        "name": "side_effects!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "label_zh",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "90a4c6f500743c8183d8dbe066a6841cd5e4364f100cfde8997500f5cab473c0"
+}

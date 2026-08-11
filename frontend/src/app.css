@@ -1,0 +1,14 @@
+/* Scroll-shadow hint for horizontally-scrollable tables (mobile widths mostly):
+   a soft shadow fades in at whichever edge still has hidden content, so a table
+   truncated by a narrow viewport doesn't look like it simply lost columns. */
+.table-responsive {
+  background:
+    linear-gradient(to right, var(--tblr-card-bg, #fff) 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(to right, rgba(255, 255, 255, 0), var(--tblr-card-bg, #fff) 70%) 100% 0,
+    linear-gradient(to right, rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0)),
+    linear-gradient(to left, rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0)) 100% 0;
+  background-repeat: no-repeat;
+  background-color: var(--tblr-card-bg, #fff);
+  background-size: 24px 100%, 24px 100%, 10px 100%, 10px 100%;
+  background-attachment: local, local, scroll, scroll;
+}

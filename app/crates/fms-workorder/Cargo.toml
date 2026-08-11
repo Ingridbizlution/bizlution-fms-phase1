@@ -1,0 +1,22 @@
+[package]
+name = "fms-workorder"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fms-shared.workspace = true
+# 契約的 WorkOrderDetail 內嵌 Attachment（include=attachments），
+# 因此這個相依是契約造成的。方向單一，無循環。
+fms-attachment.workspace = true
+axum.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+# service_items.form_schema 是真正的 JSON Schema（見 009），
+# 契約要求以 JSON Pointer 指出違規欄位 —— 這個 crate 的 instance_path 正好對應。
+jsonschema.workspace = true

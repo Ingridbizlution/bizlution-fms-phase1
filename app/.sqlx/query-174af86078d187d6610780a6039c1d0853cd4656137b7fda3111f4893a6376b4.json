@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT ON (t.action)\n               t.action          AS \"action!\",\n               t.to_status       AS \"to_status!\",\n               act.label_zh::text AS \"label_zh\",\n               t.required_fields AS \"required_fields!\",\n               t.required_permission\n        FROM fms.work_orders w\n        JOIN fms.work_order_transitions_allowed t\n          ON t.is_active\n         AND (t.tenant_id IS NULL OR t.tenant_id = w.tenant_id)\n         AND (t.work_order_type IS NULL OR t.work_order_type = w.work_order_type)\n         AND t.from_status = w.status\n        LEFT JOIN fms.work_order_actions act ON act.code = t.action\n        WHERE w.id = $1\n        ORDER BY t.action, t.tenant_id NULLS LAST, t.work_order_type NULLS LAST\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "action!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "to_status!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "label_zh",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "required_fields!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 4,
+        "name": "required_permission",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      true
+    ]
+  },
+  "hash": "174af86078d187d6610780a6039c1d0853cd4656137b7fda3111f4893a6376b4"
+}

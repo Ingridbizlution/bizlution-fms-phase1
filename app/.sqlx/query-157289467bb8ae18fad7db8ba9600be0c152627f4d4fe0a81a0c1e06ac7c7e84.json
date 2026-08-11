@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT (SELECT count(*) FROM fms.spatial_nodes c\n                    WHERE c.parent_id = $1 AND c.deleted_at IS NULL) AS \"children!\",\n                  (SELECT count(*) FROM fms.work_orders w\n                    LEFT JOIN fms.work_order_statuses st ON st.code = w.status\n                    WHERE w.spatial_node_id = $1 AND w.deleted_at IS NULL\n                      AND st.is_terminal IS NOT TRUE) AS \"open_work_orders!\",\n                  (SELECT count(*) FROM fms.bookable_resources br\n                    WHERE br.spatial_node_id = $1 AND br.is_bookable) AS \"bookable!\",\n                  (SELECT count(*) FROM fms.assets a\n                    WHERE a.spatial_node_id = $1 AND a.deleted_at IS NULL) AS \"assets!\",\n                  (SELECT count(*) FROM fms.maintenance_plans mp\n                    WHERE mp.spatial_node_id = $1) AS \"maintenance_plans!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "children!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "open_work_orders!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "bookable!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "assets!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "maintenance_plans!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "157289467bb8ae18fad7db8ba9600be0c152627f4d4fe0a81a0c1e06ac7c7e84"
+}

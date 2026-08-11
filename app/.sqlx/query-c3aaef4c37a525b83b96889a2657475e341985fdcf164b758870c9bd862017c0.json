@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.reservations\n              SET status = 'NO_SHOW'\n            WHERE id = $1\n              AND status = 'CONFIRMED'\n              AND requires_check_in\n              AND checked_in_at IS NULL\n              AND auto_release_at IS NOT NULL\n              AND auto_release_at <= clock_timestamp()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c3aaef4c37a525b83b96889a2657475e341985fdcf164b758870c9bd862017c0"
+}

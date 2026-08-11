@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE fms.reservation_holds\n           SET status = 'CONSUMED'\n         WHERE hold_token = $1\n           AND user_id = $2\n           AND bookable_resource_id = $3\n           AND status = 'ACTIVE'\n           AND expires_at > clock_timestamp()\n           AND hold_range @> tstzrange($4, $5, '[)')\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "244a41fb1f69a7072e9d326f112c6128316aeb12d86962f05964bdfc58fa127c"
+}

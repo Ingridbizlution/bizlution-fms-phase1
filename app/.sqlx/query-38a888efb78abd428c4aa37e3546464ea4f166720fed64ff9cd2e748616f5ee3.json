@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM fms.resource_amenities WHERE bookable_resource_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "38a888efb78abd428c4aa37e3546464ea4f166720fed64ff9cd2e748616f5ee3"
+}

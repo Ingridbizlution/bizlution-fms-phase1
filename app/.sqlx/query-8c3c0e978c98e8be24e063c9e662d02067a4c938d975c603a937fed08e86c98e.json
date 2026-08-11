@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.bim_models b SET\n             unresolved_elements = coalesce((\n               SELECT jsonb_agg(e)\n                 FROM jsonb_array_elements(b.unresolved_elements) e\n                WHERE coalesce(e ->> 'bim_element_id', e #>> '{}') <> ALL($2::text[])\n             ), '[]'::jsonb),\n             mapped_node_count = (\n               SELECT count(*) FROM fms.spatial_nodes n\n                WHERE n.bim_model_id = b.id AND n.bim_element_id IS NOT NULL\n                  AND n.deleted_at IS NULL),\n             mapped_asset_count = (\n               SELECT count(*) FROM fms.assets a\n                WHERE a.facility_id = b.facility_id AND a.bim_element_id IS NOT NULL\n                  AND a.deleted_at IS NULL),\n             updated_at = clock_timestamp()\n           WHERE b.id = $1\n           RETURNING mapped_node_count, mapped_asset_count,\n                     jsonb_array_length(unresolved_elements) AS \"unresolved_count!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mapped_node_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "mapped_asset_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "unresolved_count!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "8c3c0e978c98e8be24e063c9e662d02067a4c938d975c603a937fed08e86c98e"
+}

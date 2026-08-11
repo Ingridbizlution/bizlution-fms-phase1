@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO fms.maintenance_occurrences\n          (tenant_id, plan_id, asset_id, scheduled_for, status)\n        VALUES ($1, $2, $3, $4, 'PLANNED')\n        ON CONFLICT (plan_id, coalesce(asset_id, '00000000-0000-0000-0000-000000000000'::uuid),\n                     scheduled_for)\n        DO NOTHING\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "30243d4b418eee91249ff9081bbbf5a0d2a72cb3f3753663d21460ba8aab7e9d"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT bool_and(organizer_id = fms.current_user_id()) AS \"all_mine!\"\n             FROM fms.reservations WHERE recurrence_group_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "all_mine!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "360c9ad88f3bdb649d014d0bcd37082caa5f07effe253729f61dfe05891bbc2a"
+}

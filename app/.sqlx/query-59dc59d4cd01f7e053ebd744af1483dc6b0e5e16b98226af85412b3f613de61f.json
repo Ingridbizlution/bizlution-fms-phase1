@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT rp.user_id,\n                  u.display_name AS \"display_name?\",\n                  rp.external_email,\n                  rp.role AS \"role!\",\n                  rp.response AS \"response!\"\n           FROM fms.reservation_participants rp\n           LEFT JOIN fms.users u ON u.id = rp.user_id\n           WHERE rp.reservation_id = $1\n           ORDER BY rp.invited_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "external_email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "role!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "response!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "59dc59d4cd01f7e053ebd744af1483dc6b0e5e16b98226af85412b3f613de61f"
+}

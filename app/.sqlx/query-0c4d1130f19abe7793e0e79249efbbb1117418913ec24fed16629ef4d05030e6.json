@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fms.organizations SET\n             code            = coalesce($2, code),\n             name            = coalesce($3, name),\n             org_type        = coalesce($4, org_type),\n             status          = coalesce($5, status),\n             parent_id       = CASE WHEN $6 THEN $7 ELSE parent_id END,\n             cost_center     = CASE WHEN $8 THEN $9 ELSE cost_center END,\n             manager_user_id = CASE WHEN $10 THEN $11 ELSE manager_user_id END,\n             updated_at = clock_timestamp()\n           WHERE id = $1 AND deleted_at IS NULL\n           RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Text",
+        "Bool",
+        "Uuid",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0c4d1130f19abe7793e0e79249efbbb1117418913ec24fed16629ef4d05030e6"
+}

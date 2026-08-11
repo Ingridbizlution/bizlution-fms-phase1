@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.external_resource_id, i.provider, i.ms_tenant_id\n                 FROM fms.calendar_resource_mappings m\n                 JOIN fms.calendar_integrations i ON i.id = m.calendar_integration_id\n                WHERE m.spatial_node_id = $1 AND m.status = 'ACTIVE'\n                  AND i.status = 'ACTIVE'\n                  AND m.sync_direction IN ('PUSH_ONLY', 'BIDIRECTIONAL')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "external_resource_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "provider",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "ms_tenant_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "10611c149ae64e1eba12a60f150c4363612b6d23a44404fe4d8859809e781ec3"
+}
