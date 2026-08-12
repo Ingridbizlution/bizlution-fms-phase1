@@ -2,28 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "offision-frontend",
+      "name": "fms-frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "/Users/rt/Documents/Claude/Projects/Bizlution FMS/Offision frontend"],
-      "port": 5173
-    },
-    {
-      "name": "fms-frontend-i18n-theme",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "/Users/rt/Documents/Claude/Projects/Bizlution FMS/backend-phase1/.claude/worktrees/frontend-i18n-theme/frontend", "--", "--port", "5174"],
-      "port": 5174
-    },
-    {
-      "name": "fms-frontend-visual-upgrade",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "/Users/rt/Documents/Claude/Projects/Bizlution FMS/backend-phase1/.claude/worktrees/frontend-visual-upgrade/frontend", "--", "--port", "5175", "--host", "127.0.0.1"],
-      "port": 5175
-    },
-    {
-      "name": "fms-frontend-main",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "/Users/rt/Documents/Claude/Projects/Bizlution FMS/backend-phase1/frontend", "--", "--port", "5176", "--host", "127.0.0.1"],
-      "port": 5176
+      "runtimeArgs": ["run", "dev", "--prefix", "/Users/bizlution/Desktop/bizlution-fms-phase1-main/frontend", "--", "--port", "5180", "--host", "127.0.0.1"],
+      "port": 5180
     }
   ]
 }

@@ -97,11 +97,44 @@ pub struct AuthUser {
     pub must_change_password: bool,
 }
 
-/// 依 username 取得同租戶內的使用者。須在已設 context 的交易內執行，
-/// 因此 RLS 已保證只會看到本租戶的列 —— 查詢本身不需要寫 tenant_id 條件。
-pub async fn find_auth_user_by_username(
+/// 依**登入識別碼**取得同租戶內的使用者：`email` 或 `username` 皆可。
+/// 須在已設 context 的交易內執行，因此 RLS 已保證只會看到本租戶的列 ——
+/// 查詢本身不需要寫 tenant_id 條件。
+///
+/// # 為什麼收兩種而不是只認 email
+///
+/// 前端的登入畫面收 email（使用者記得的是那個），但 `fms.users.email`
+/// **可為 NULL** —— 002 的唯一索引就寫著 `WHERE email IS NOT NULL`。
+/// 而沒有 email 的正是最依賴本地密碼的一群：外包（示範租戶的
+/// `clean.vendor01`）、Kiosk、服務帳號。只認 email 會讓他們從此無法登入，
+/// 而規格書把 LOCAL provider 的定位寫成「外包技師、Kiosk」。
+///
+/// 因此 `username` 這個欄位的語意擴大為「識別碼」，契約
+/// （`TokenRequest.username`）不必改，既有以 username 登入的客戶端照舊。
+///
+/// # email 命中優先於 username，是刻意的
+///
+/// 兩者是不同欄位、各自只在租戶內唯一，因此「A 的 username 等於 B 的
+/// email」是資料庫允許的狀態。若 username 優先，任何人只要把自己的
+/// username 設成別人的 email，就能截走那個登入嘗試 —— 他拿不到 token
+/// （密碼比對仍會失敗），但受害者會把真密碼打進別人的帳號上。
+/// `ORDER BY ... DESC LIMIT 1` 讓這種撞名收斂到「email 的擁有者」，
+/// 也順帶保證撞名時不會回傳多列（`fetch_optional` 遇多列會是 500）。
+///
+/// # `lower(...)`：因為 `::text` 會把 citext 的語意丟掉
+///
+/// `username` 與 `email` 都是 `citext`，但 `username::text = $1` 是
+/// **text 比 text**，大小寫敏感 —— 原本的查詢就是這樣寫的，於是資料庫認為
+/// 同一個身分（citext 的唯一索引不分大小寫）的兩種拼法，登入卻只認一種。
+/// 這件事對 username 是潛在問題，對 email 是一定會發生的問題：沒有人會
+/// 在意自己的信箱首字母有沒有大寫。
+///
+/// 不寫 `$1::citext` 是為了讓參數維持 text 綁定（sqlx 沒有 citext 的內建
+/// 對應型別，見本檔檔頭）。`lower()` 用不到 `uq_users_tenant_email` 索引，
+/// 但這條查詢已經被 RLS 收斂到單一租戶的 users，且每次登入只跑一次。
+pub async fn find_auth_user_by_identifier(
     tx: &mut TenantTx,
-    username: &str,
+    identifier: &str,
 ) -> Result<Option<AuthUser>, Problem> {
     let row = sqlx::query_as!(
         AuthUser,
@@ -111,10 +144,12 @@ pub async fn find_auth_user_by_username(
                status,
                must_change_password
         FROM fms.users
-        WHERE username::text = $1
+        WHERE (lower(email::text) = lower($1) OR lower(username::text) = lower($1))
           AND deleted_at IS NULL
+        ORDER BY (lower(email::text) = lower($1)) DESC
+        LIMIT 1
         "#,
-        username
+        identifier
     )
     .fetch_optional(tx.conn())
     .await

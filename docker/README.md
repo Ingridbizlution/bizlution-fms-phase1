@@ -168,6 +168,72 @@ Migration 連線字串
 
 若以超級使用者執行，`smoke-test.sh` 會直接拒絕並提示，避免測試「靜默通過」。
 
+## 跑 Rust 整合測試（`cargo test`）—— 預設併發會把連線吃光
+
+這一節講的是 `app/crates/fms-server/tests/` 那批（`auth_slice`、`auth_tail_slice`
+等），不是上面的 SQL 煙霧測試。
+
+前置一次：
+
+```bash
+make test-template          # 建 fms_template；沒有它，每個測試都會說「did you run make test-template?」
+```
+
+跑法：
+
+```bash
+cd app
+DATABASE_URL=postgres://fms_app:change_me_app@localhost:5433/fms \
+  cargo test -p fms-server --test auth_tail_slice -- --test-threads=2
+```
+
+**兩件事必須做，否則你會查到一個假的 bug：**
+
+1. **先把 `fms-server` 停掉。** 它自己握一個連線池（`DB_MAX_CONNECTIONS`），
+   跟測試搶同一個 PostgreSQL。
+2. **`--test-threads=2`。** 每個測試在 `TestContext::setup()` 裡各跑一次
+   `CREATE DATABASE … TEMPLATE fms_template`（見 `tests/common/mod.rs` 檔頭），
+   而 cargo 預設併發是 CPU 核心數。實測 9 個測試併行就把連線耗盡。
+
+**耗盡的症狀會指向錯的地方。** 實際發生過的一次：`auth_tail_slice` 9 項全部
+失敗，訊息是
+
+```
+assertion `left == right` failed: login failed:
+  {"code":"INTERNAL_ERROR","status":500, …}
+```
+
+看起來像 auth 壞了。它不是 —— 連線拿不到而已。序列化重跑之後訊息才變成真正的
+原因（`connect to the maintenance database as fms_owner: PoolTimedOut`），
+接著連 `psql` 都連不進去，最後 Docker daemon 一起卡死。
+
+**而且失敗會留下垃圾，讓下一輪更容易爆。** 測試在 panic 的路徑上來不及
+drop 自己的資料庫 —— 那次留了 9 個 `fms_test_*`，基數越墊越高，於是
+「再跑一次看看」會越跑越糟。跑完（尤其是失敗之後）清一次：
+
+```bash
+cd docker
+for d in $(docker compose exec -T -e PGPASSWORD=change_me_postgres postgres \
+             psql -U postgres -d postgres -Atc \
+             "SELECT datname FROM pg_database WHERE datname LIKE 'fms_test_%'" </dev/null); do
+  docker compose exec -T -e PGPASSWORD=change_me_postgres postgres \
+    psql -U postgres -d postgres -Atc "DROP DATABASE IF EXISTS \"$d\"" </dev/null
+done
+```
+
+密碼用 `.env` 的 `POSTGRES_SUPERUSER_PASSWORD`。**`</dev/null` 不能省** ——
+`docker compose exec -T` 會吃掉迴圈的 stdin，少了它只會刪掉第一個。
+（`for d in $(…)` 而不是 `for d in $VAR`：zsh 不對未加引號的變數做斷詞，
+用變數會把整份清單當成單一識別字。）
+
+確認乾淨：
+
+```bash
+docker compose exec -T -e PGPASSWORD=change_me_postgres postgres \
+  psql -U postgres -d postgres -Atc \
+  "SELECT count(*) FROM pg_database WHERE datname LIKE 'fms_test_%'"   # 應為 0
+```
+
 ## 平台情境的安全性（migration 013）
 
 001 原本的 `fms.is_platform_context()` 只檢查 session 變數，任何連線都能
@@ -381,6 +447,10 @@ steps:
 **改了 initdb 腳本卻沒生效**：初始化只在資料卷為空時執行一次，需 `make reset`。
 
 **`make test` 說找不到示範租戶**：先跑 `make seed`。
+
+**`cargo test` 整批失敗，訊息是登入回 `INTERNAL_ERROR` 或 `PoolTimedOut`**：
+連線被耗盡，不是 auth 壞了。停掉 `fms-server`、加 `--test-threads=2`、
+清掉殘留的 `fms_test_*`，見上面「跑 Rust 整合測試」一節。
 
 **擴充安裝失敗**：`ltree`／`btree_gist`／`pgcrypto`／`pg_trgm`／`citext` 都是
 PostgreSQL 13+ 的 trusted extension，具備資料庫 `CREATE` 權限的 `fms_owner`

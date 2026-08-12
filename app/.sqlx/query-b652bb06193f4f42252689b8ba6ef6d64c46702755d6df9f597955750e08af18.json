@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id,\n               password_hash,\n               status,\n               must_change_password\n        FROM fms.users\n        WHERE username::text = $1\n          AND deleted_at IS NULL\n        ",
+  "query": "\n        SELECT id,\n               password_hash,\n               status,\n               must_change_password\n        FROM fms.users\n        WHERE (lower(email::text) = lower($1) OR lower(username::text) = lower($1))\n          AND deleted_at IS NULL\n        ORDER BY (lower(email::text) = lower($1)) DESC\n        LIMIT 1\n        ",
   "describe": {
     "columns": [
       {
@@ -36,5 +36,5 @@
       false
     ]
   },
-  "hash": "55a0af3028e9900ac89d444dcb74c2578a8468c4a41cfaec10cadeea17b245ec"
+  "hash": "b652bb06193f4f42252689b8ba6ef6d64c46702755d6df9f597955750e08af18"
 }

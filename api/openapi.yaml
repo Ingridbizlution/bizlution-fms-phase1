@@ -9489,7 +9489,19 @@ components:
           type: string
           enum: [password, authorization_code, client_credentials, refresh_token]
         tenant_code: { type: string, description: password grant 時用來定位租戶 }
-        username: { type: string }
+        username:
+          type: string
+          description: |
+            password grant 的**登入識別碼**：`users.email` 或 `users.username`
+            皆可，兩者都不分大小寫（欄位型別是 `citext`）。email 命中優先 ——
+            兩者是不同欄位、各自只在租戶內唯一，因此「A 的 username 等於 B 的
+            email」是允許的狀態，優先 email 可避免有人用 username 截走別人的
+            登入嘗試。
+
+            欄位名維持 `username` 而不另開一個 `email`：email 並非必填
+            （`users.email` 可為 NULL，外包與 Kiosk 帳號通常沒有），那些帳號
+            仍必須能以 username 登入。
+          example: someone@example.com
         password: { type: string, format: password }
         code: { type: string }
         code_verifier: { type: string }

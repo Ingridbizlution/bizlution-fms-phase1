@@ -9,6 +9,7 @@ import { NotificationTemplatesTab } from "./NotificationTemplatesTab";
 import { OrganizationsTab } from "./OrganizationsTab";
 import { RolesTab } from "./RolesTab";
 import { SkillsTab } from "./SkillsTab";
+import { TenantTab } from "./TenantTab";
 import { UsersTab } from "./UsersTab";
 import { WebhooksTab } from "./WebhooksTab";
 
@@ -22,6 +23,7 @@ const TABS = [
   { key: "notifications", labelKey: "admin.tabNotifications" },
   { key: "webhooks", labelKey: "admin.tabWebhooks" },
   { key: "skills", labelKey: "admin.tabSkills" },
+  { key: "tenant", labelKey: "admin.tabTenant" },
 ] as const;
 
 export function AdminPage() {
@@ -48,6 +50,7 @@ export function AdminPage() {
         {tab === "notifications" && <NotificationTemplatesTab />}
         {tab === "webhooks" && <WebhooksTab />}
         {tab === "skills" && <SkillsTab />}
+        {tab === "tenant" && <TenantTab />}
       </PageBody>
     </>
   );

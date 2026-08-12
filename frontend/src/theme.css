@@ -1,38 +1,37 @@
-/* Japanese-minimalist token overrides layered on top of stock Tabler.
+/* Offision-inspired design tokens layered on top of stock Tabler.
    Only --tblr-* custom properties are touched here — no component selectors —
-   so this survives a `@tabler/core` version bump cleanly. Semantic colors
+   so this survives a @tabler/core version bump cleanly. Semantic colors
    (--tblr-danger/--tblr-warning/--tblr-success) are intentionally left at
    Tabler's defaults; badges across this app (see src/lib/statusColors.ts)
    depend on those reading as red/amber/green. */
 :root {
-  /* Muted primary: soft graphite-blue instead of Tabler's vivid default #066fd1 */
-  --tblr-primary: #4b5a73;
-  --tblr-primary-rgb: 75, 90, 115;
+  /* Primary: modern SaaS blue (matches Offision --off-primary: #1f80f0) */
+  --tblr-primary: #1f80f0;
+  --tblr-primary-rgb: 31, 128, 240;
   --tblr-link-color: var(--tblr-primary);
 
-  /* Hairline borders, flatter geometry */
+  /* Rounded geometry (matches Offision --off-card-radius: 14px) */
   --tblr-border-width: 1px;
-  --tblr-border-radius: 4px;
-  --tblr-border-radius-sm: 3px;
-  --tblr-border-radius-lg: 6px;
-  --tblr-border-color: #e4e4e2;
-  --tblr-border-color-translucent: #e4e4e2;
+  --tblr-border-radius: 12px;
+  --tblr-border-radius-sm: 8px;
+  --tblr-border-radius-lg: 16px;
+  --tblr-border-color: #eceff5;
+  --tblr-border-color-translucent: #eceff5;
 
-  /* Flatten ambient shadows on cards/top-level chrome; keep dropdown/modal
-     depth but soften it */
+  /* Flat cards with border (Offision style — no ambient shadow on cards) */
   --tblr-shadow-card: none;
   --tblr-card-box-shadow: none;
   --tblr-box-shadow: none;
   --tblr-box-shadow-sm: none;
-  --tblr-shadow-dropdown: 0 4px 16px rgba(31, 36, 48, 0.08);
-  --tblr-modal-box-shadow: 0 8px 28px rgba(31, 36, 48, 0.1);
+  --tblr-shadow-dropdown: 0 8px 24px rgba(28, 34, 45, 0.10);
+  --tblr-modal-box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 
-  /* Warm-gray neutral surfaces instead of blue-tinted gray */
-  --tblr-body-bg: #f7f6f4;
+  /* Blue-gray neutral surfaces (matches Offision --off-bg: #f6f7fb) */
+  --tblr-body-bg: #f6f7fb;
   --tblr-bg-surface: #ffffff;
-  --tblr-bg-surface-secondary: #f7f6f4;
-  --tblr-bg-surface-tertiary: #f2f1ee;
-  --tblr-body-color: #2b2d33;
+  --tblr-bg-surface-secondary: #f6f7fb;
+  --tblr-bg-surface-tertiary: #edf0f7;
+  --tblr-body-color: #2b2f3a;
 
   /* Type: CJK-aware stack (Traditional Chinese + Japanese) with Inter leading
      for latin characters */
@@ -47,24 +46,46 @@
   --tblr-spacer: 1.25rem;
 }
 
-/* Dark sidebar: keep it dark (matches the existing shell), just desaturate
-   and flatten to match the rest of the palette */
+/* Light sidebar: white background matching Offision --off-sidebar-bg */
 .navbar-vertical {
-  --tblr-navbar-bg: #23262e;
-  --tblr-navbar-color: rgba(255, 255, 255, 0.78);
-  --tblr-navbar-hover-color: #ffffff;
-  --tblr-navbar-active-color: #ffffff;
+  --tblr-navbar-bg: #ffffff;
+  --tblr-navbar-color: #4b525f;
+  --tblr-navbar-hover-color: #1f80f0;
+  --tblr-navbar-active-color: #1f80f0;
+}
+
+.navbar-vertical.navbar {
+  border-right: 1px solid #eceff5 !important;
+  box-shadow: none !important;
+}
+
+/* Active nav item: Offision blue tint pill */
+.navbar-vertical .nav-link.active {
+  background-color: #e8f1ff !important;
+  color: #1f80f0 !important;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Hover state: light blue wash */
+.navbar-vertical .nav-link:hover:not(.active) {
+  background-color: #eef4ff;
+  border-radius: 10px;
 }
 
 /* Top navbar: plain hairline-bottomed bar, not a colored band */
 .navbar:not(.navbar-vertical) {
   --tblr-navbar-bg: #ffffff;
-  --tblr-navbar-color: #2b2d33;
+  --tblr-navbar-color: #2b2f3a;
   border-bottom: 1px solid var(--tblr-border-color);
 }
 
-/* Subtle hover lift on interactive cards (Kanban cards, clickable report/dashboard cards) —
-   a border-color shift only, no shadow, to stay consistent with the flat card style above. */
+/* Pill-shaped buttons (Offision style: border-radius 999px) */
+.btn {
+  border-radius: 999px !important;
+}
+
+/* Interactive cards: border-color lift on hover (Offision keeps flat, no shadow) */
 .card {
   transition: border-color 120ms ease;
 }
@@ -73,25 +94,18 @@ a.card:hover,
   border-color: var(--tblr-primary);
 }
 
-/* Per-module accent tint on sidebar icons (see src/shell/nav.ts) — a small dot of color for
-   visual hierarchy while keeping the dark sidebar itself desaturated. */
+/* Per-module accent tint on sidebar icons (see src/shell/nav.ts) — colored dot
+   for visual hierarchy on the now-white sidebar. */
 .navbar-vertical .nav-link-icon {
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 2px;
   transition: background-color 120ms ease;
 }
-.navbar-vertical .nav-link.active .nav-link-icon,
-.navbar-vertical .nav-link:hover .nav-link-icon {
-  background-color: rgba(255, 255, 255, 0.08);
+.navbar-vertical .nav-link.active .nav-link-icon {
+  background-color: rgba(31, 128, 240, 0.12);
 }
 
-/* Navbar dropdowns (notifications/language/facility switcher) anchor via plain CSS
-   `.dropdown-menu-end` (right: 0 relative to the trigger's own narrow nav-item box) — on
-   phone widths the trigger icons sit left-of-center, so right-aligning a 20rem-wide menu
-   (the notification card) pushes most of it off-screen (measured: left: -224px). Centering
-   on the trigger instead of right-aligning keeps it within the viewport regardless of which
-   icon opened it, and — unlike `position: fixed` — stays correctly anchored under the icon
-   if the page has been scrolled. */
+/* Navbar dropdowns — mobile centering fix */
 @media (max-width: 767.98px) {
   .navbar .dropdown-menu {
     left: 50% !important;

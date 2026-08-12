@@ -71,14 +71,27 @@ production URL —— 有的話會補在這裡。
 curl -X POST http://localhost:8080/api/v1/auth/token \
   -H 'Content-Type: application/json' \
   -d '{"grant_type":"password","tenant_code":"DEMO_GROUP",
-       "username":"admin.chen","password":"Demo1234!"}'
+       "username":"admin.chen@demo.bizlution.com","password":"Demo1234!"}'
 ```
 
-回應是 `{ access_token, refresh_token, expires_in, token_type }`。
+回應是 `{ access_token, refresh_token, expires_in, token_type, tenant_id,
+user_id, must_change_password }`。**`expires_in` 目前是 900 秒**（契約的
+example 寫 3600，別照那個算 refresh 時機）。
+
+### `username` 這個欄位收 email，也收 username
+
+契約的欄位名是 `username`，但它的語意是**識別碼**：`users.email` 或
+`users.username` 皆可，兩者都不分大小寫。登入畫面收 email 就直接放進這個
+欄位，不必先查出 username。
+
+email 不是必填欄位（`users.email` 可為 NULL —— 示範租戶的 `clean.vendor01`
+與四個服務帳號就是），那些帳號仍然只能以 username 登入。撞名時 email 優先，
+理由見 `openapi.yaml` 的欄位說明。
 
 ### 示範帳號
 
-密碼全部是 **`Demo1234!`**，租戶代碼 `DEMO_GROUP`。
+密碼全部是 **`Demo1234!`**，租戶代碼 `DEMO_GROUP`，email 一律是
+`<username>@demo.bizlution.com`。
 
 | 帳號 | 角色 | 適合驗什麼 |
 |---|---|---|
@@ -319,6 +332,11 @@ GET /facilities/{id}/floor-view            → PARSED 之後，樓層/空間/幾
 * **附件走預簽網址**：`POST /…/attachments` 回一個 MinIO 的網址，
   上傳是前端直接 PUT 到那個網址，不經過 API。
 * **`otel-collector` 目前起不來**（bind-mount 的 config 有問題）。不影響 API。
+* **如果你為了追一個 500 而去跑後端的 `cargo test`**：那批整合測試預設的併發
+  會把 PostgreSQL 的連線吃光（每個測試各建一個資料庫），而耗盡的症狀是
+  **登入回 500 `INTERNAL_ERROR`** —— 看起來正是 auth 壞了。停掉
+  `fms-server`、加 `--test-threads=2`、跑完清掉殘留的 `fms_test_*`；
+  完整說明在 `docker/README.md` 的「跑 Rust 整合測試」一節。
 
 ---
 

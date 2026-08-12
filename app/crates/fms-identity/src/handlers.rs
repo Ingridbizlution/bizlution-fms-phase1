@@ -141,23 +141,35 @@ async fn password_grant(
         .tenant_code
         .as_deref()
         .ok_or_else(|| Problem::validation("tenant_code is required for the password grant"))?;
-    let username = req
+    // 契約的欄位名仍是 `username`，但語意是**識別碼**：email 或 username 皆可
+    // （見 `repo::find_auth_user_by_identifier`）。前端的登入畫面送 email。
+    let identifier = req
         .username
         .as_deref()
-        .ok_or_else(|| Problem::validation("username is required for the password grant"))?;
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| {
+            Problem::validation("username is required for the password grant (email or username)")
+        })?;
     let supplied = req
         .password
         .as_deref()
         .ok_or_else(|| Problem::validation("password is required for the password grant"))?;
 
-    if let Some(retry_after) = state.throttle.check(tenant_code, username) {
+    // 節流的鍵一律小寫。查詢改成不分大小寫之後，若鍵還照原樣帶進來，
+    // `admin@x` 與 `Admin@x` 會落在兩個不同的桶子裡 —— 同一個帳號的
+    // 可嘗試次數就等於乘上大小寫排列數，節流形同虛設。
+    let throttle_key = identifier.to_lowercase();
+    let throttle_key = throttle_key.as_str();
+
+    if let Some(retry_after) = state.throttle.check(tenant_code, throttle_key) {
         // 被擋掉的嘗試刻意**不**寫進 auth_events：導致封鎖的那幾筆失敗
         // 已經在軌裡了，而持續被擋的請求若也各寫一列，攻擊者就能用
         // 送請求換稽核表成長 —— 節流反而成了放大器。
         // 封鎖本身是營運訊號，因此走 log 與告警。
         tracing::warn!(
             tenant_code,
-            username,
+            identifier,
             retry_after,
             "登入節流生效：窗內失敗次數超過門檻"
         );
@@ -167,9 +179,9 @@ async fn password_grant(
         ));
     }
 
-    match attempt_password_grant(state, tenant_code, username, supplied).await {
+    match attempt_password_grant(state, tenant_code, identifier, supplied).await {
         Ok(granted) => {
-            state.throttle.clear(tenant_code, username);
+            state.throttle.clear(tenant_code, throttle_key);
             repo::record_login_event(
                 &state.pool,
                 Some(granted.tenant_id),
@@ -186,7 +198,7 @@ async fn password_grant(
             user_id,
             reason,
         }) => {
-            state.throttle.record_failure(tenant_code, username);
+            state.throttle.record_failure(tenant_code, throttle_key);
             repo::record_login_event(
                 &state.pool,
                 tenant_id,
@@ -208,7 +220,7 @@ async fn password_grant(
 async fn attempt_password_grant(
     state: &IdentityState,
     tenant_code: &str,
-    username: &str,
+    identifier: &str,
     supplied: &str,
 ) -> Result<Granted, Rejection> {
     // 尚無 RLS 情境，因此經 014 的 SECURITY DEFINER 函式解析租戶。
@@ -238,7 +250,7 @@ async fn attempt_password_grant(
         .await
         .map_err(Rejection::Passthrough)?;
 
-    let user = match repo::find_auth_user_by_username(&mut tx, username).await {
+    let user = match repo::find_auth_user_by_identifier(&mut tx, identifier).await {
         Ok(Some(u)) => u,
         Ok(None) => {
             password::verify_dummy_async(supplied.to_string()).await;
